@@ -358,7 +358,9 @@ public class AdminController : ControllerBase
                    idea.Descripcion,
                    idea.Status,
                    idea.CodigoEmpleado,
-                   employee != null ? employee.NombreCompleto : user != null ? user.NombreCompleto : null,
+                   employee != null
+                       ? ((employee.Nombre ?? "") + " " + (employee.Apellido1 ?? "") + " " + (employee.Apellido2 ?? "")).Trim()
+                       : user != null ? user.NombreCompleto : null,
                    employee != null ? employee.E_Mail : null,
                    employee != null ? employee.Departamento : null,
                    idea.Clasificacion
