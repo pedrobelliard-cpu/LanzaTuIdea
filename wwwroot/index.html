@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lanza tu idea 0.1 | Sistema de Innovación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Colores Botones */
+        .btn-registar { background-color: #16a34a; color: white; } /* Verde */
+        .btn-registar:hover { background-color: #15803d; }
+        .btn-cancelar { background-color: #dc2626; color: white; } /* Rojo */
+        .btn-cancelar:hover { background-color: #b91c1c; }
+        .btn-limpiar { background-color: #facc15; color: #854d0e; } /* Amarillo */
+        .btn-limpiar:hover { background-color: #eab308; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl font-black italic text-slate-800 tracking-tighter">Lanza <span class="text-blue-600">tu idea 0.1</span></span>
+                    <span class="hidden md:block text-xs font-semibold text-slate-400 border-l-2 border-slate-200 pl-4 uppercase tracking-wide">Dep. Investigación Aplicada a la Innovación</span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span id="userInfo" class="text-sm font-medium text-slate-500"></span>
+                    <button onclick="logout()" id="btnLogout" class="hidden text-xs font-bold text-red-500 hover:text-red-700 uppercase">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="viewLogin" class="flex-grow flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+            <div class="bg-blue-600 p-8 text-center">
+                <h1 class="text-3xl font-bold text-white mb-2">Bienvenido</h1>
+                <p class="text-blue-100">Ingresa tus credenciales para continuar</p>
+            </div>
+            <form id="loginForm" class="p-8 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Usuario</label>
+                    <input type="text" id="loginUser" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu usuario" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="loginPass" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu contraseña" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Entrar</button>
+                <p class="text-xs text-slate-400 text-center">El rol (Ideador o Admin) se asigna automáticamente según tus permisos.</p>
+            </form>
+        </div>
+    </div>
+
+    <main id="viewIdeador" class="hidden max-w-5xl mx-auto w-full p-6 space-y-6 fade-in">
+
+        <div id="ideadorHome" class="space-y-8">
+            <div class="text-center py-10">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">¿Tienes una idea innovadora?</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto" id="systemDescription">
+                    Este es el sistema oficial para registrar, revisar y clasificar las ideas de innovación para su posterior ejecución. Tu creatividad impulsa nuestro crecimiento.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+                <button onclick="navIdeador('formulario')" class="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 hover:shadow-2xl hover:-translate-y-1 transition-all text-center group">
+                    <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🚀</div>
+                    <h3 class="text-2xl font-bold text-blue-600 mb-2">Lanza tu idea</h3>
+                    <p class="text-slate-500">Accede al formulario para registrar una nueva propuesta.</p>
+                </button>
+                <button onclick="navIdeador('lista')" class="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 hover:shadow-2xl hover:-translate-y-1 transition-all text-center group">
+                    <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📂</div>
+                    <h3 class="text-2xl font-bold text-slate-700 mb-2">Ideas Lanzadas</h3>
+                    <p class="text-slate-500">Consulta el histórico y estatus de tus ideas registradas.</p>
+                </button>
+            </div>
+        </div>
+
+        <div id="ideadorForm" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-700">📝 Formulario de Registro</h3>
+                <button onclick="navIdeador('home')" class="text-sm font-bold text-slate-500 hover:text-blue-600">← Volver al inicio</button>
+            </div>
+            <form id="formIdea" class="p-8 space-y-6">
+                <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-blue-800 uppercase mb-1">No. Empleado <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="idEmpleado" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" readonly>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+                            <input type="text" id="nombreEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Electrónico</label>
+                            <input type="text" id="correoEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dirección / Depto</label>
+                            <input type="text" id="direccionEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Descripción de la Idea <span class="text-red-500">*</span></label>
+                        <textarea id="descIdea" rows="2" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Título corto o resumen de la idea..." required></textarea>
+                        <button type="button" onclick="limpiarCampo('descIdea')" class="text-xs text-red-400 hover:text-red-600 mt-1">Borrar campo</button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Detalle <span class="text-red-500">*</span></label>
+                        <textarea id="detalleIdea" rows="5" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Explica detalladamente en qué consiste..." required></textarea>
+                        <button type="button" onclick="limpiarCampo('detalleIdea')" class="text-xs text-red-400 hover:text-red-600 mt-1">Borrar campo</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
+                    <button type="submit" class="btn-registar py-3 px-6 rounded-xl font-bold flex-1 shadow-md transition-transform active:scale-95">
+                        Registrar Idea
+                    </button>
+                    <button type="button" onclick="limpiarFormulario()" class="btn-limpiar py-3 px-6 rounded-xl font-bold flex-1 shadow-md transition-transform active:scale-95">
+                        Limpiar Campos
+                    </button>
+                    <button type="button" onclick="cancelarProceso()" class="btn-cancelar py-3 px-6 rounded-xl font-bold flex-1 shadow-md transition-transform active:scale-95">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="ideadorLista" class="hidden space-y-4">
+            <div class="flex justify-between items-end">
+                <h3 class="text-2xl font-bold text-slate-800">📂 Mis Ideas Lanzadas</h3>
+                <div class="space-x-2">
+                    <button onclick="navIdeador('formulario')" class="text-blue-600 font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">Nueva Idea</button>
+                    <button onclick="navIdeador('home')" class="text-slate-500 font-bold text-sm bg-white px-4 py-2 rounded-lg hover:bg-slate-100">Volver Inicio</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-500 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="p-4">ID</th>
+                            <th class="p-4">Fecha</th>
+                            <th class="p-4">Descripción</th>
+                            <th class="p-4">Estatus</th>
+                            <th class="p-4 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaMisIdeas" class="text-sm divide-y divide-slate-100">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <main id="viewAdmin" class="hidden max-w-7xl mx-auto w-full p-6 space-y-6 fade-in">
+
+        <div id="adminDashboard">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">📊 Dashboard General</h2>
+                <div class="flex gap-2">
+                    <button onclick="navAdmin('registrar')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700">Registrar Idea (Manual)</button>
+                    <button onclick="navAdmin('inbox')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">📥 Ideas Registradas</button>
+                    <button onclick="navAdmin('revisadas')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">✅ Ideas Revisadas</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-2xl shadow border-l-4 border-blue-500">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Total Registradas</p>
+                    <p id="kpiTotalIdeas" class="text-3xl font-black text-slate-800">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow border-l-4 border-yellow-500">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Pendientes Revisión</p>
+                    <p id="kpiPendientes" class="text-3xl font-black text-slate-800">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow border-l-4 border-green-500">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Aprobadas/Revisadas</p>
+                    <p id="kpiAprobadas" class="text-3xl font-black text-slate-800">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow border-l-4 border-sky-500">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Usuarios Activos</p>
+                    <p id="kpiUsuarios" class="text-3xl font-black text-slate-800">0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow">
+                    <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase">Estatus de Ideas</h3>
+                    <canvas id="chartStatus"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow">
+                    <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase">Clasificación de Ideas</h3>
+                    <canvas id="chartClasificacion"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminInbox" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-slate-800">📥 Ideas Registradas</h3>
+                <button onclick="navAdmin('dashboard')" class="text-slate-500 font-bold text-sm bg-white px-4 py-2 rounded-lg hover:bg-slate-100">Volver Dashboard</button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-500 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="p-4">Fecha</th>
+                            <th class="p-4">Empleado</th>
+                            <th class="p-4">Descripción</th>
+                            <th class="p-4 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaInbox" class="text-sm divide-y divide-slate-100">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="adminRevisadas" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-slate-800">✅ Ideas Revisadas</h3>
+                <button onclick="navAdmin('dashboard')" class="text-slate-500 font-bold text-sm bg-white px-4 py-2 rounded-lg hover:bg-slate-100">Volver Dashboard</button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-500 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="p-4">Fecha</th>
+                            <th class="p-4">Empleado</th>
+                            <th class="p-4">Descripción</th>
+                            <th class="p-4">Clasificación</th>
+                            <th class="p-4 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaRevisadas" class="text-sm divide-y divide-slate-100">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="adminForm" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-700">🛡️ Registro Manual Administrativo</h3>
+                <button onclick="navAdmin('dashboard')" class="text-sm font-bold text-slate-500 hover:text-blue-600">← Volver al dashboard</button>
+            </div>
+            <form id="formAdminManual" class="p-8 space-y-6">
+                <div class="bg-sky-50 p-6 rounded-2xl border border-sky-100 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-sky-700 uppercase mb-1">No. Empleado</label>
+                            <input type="text" id="adminIdEmp" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-sky-500" placeholder="Ej: 1010" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+                            <input type="text" id="adminNomEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo</label>
+                            <input type="text" id="adminMailEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Departamento</label>
+                            <input type="text" id="adminDirEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Descripción</label>
+                        <textarea id="adminDesc" rows="2" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-sky-500" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Detalle</label>
+                        <textarea id="adminDetalle" rows="4" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-sky-500" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vía de Registro</label>
+                        <select id="adminVia" class="w-full p-3 border rounded-xl bg-white text-sm">
+                            <option value="Sistema">Sistema</option>
+                            <option value="Correo">Correo</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-sky-600 text-white py-3 rounded-lg font-bold hover:bg-sky-700">Registrar Idea Manual</button>
+            </form>
+        </div>
+    </main>
+
+    <div id="modalDetalle" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
+            <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500">✖</button>
+            <h3 class="text-xl font-bold text-slate-700 mb-2">Detalle de Idea</h3>
+            <div class="space-y-2 text-sm text-slate-600">
+                <p><strong>ID:</strong> <span id="modalId"></span></p>
+                <p><strong>Fecha:</strong> <span id="mFecha"></span></p>
+                <p><strong>Usuario:</strong> <span id="mUsuario"></span></p>
+                <p><strong>Descripción:</strong> <span id="mDesc"></span></p>
+                <p><strong>Detalle:</strong> <span id="mDetalle"></span></p>
+                <p><strong>Estatus:</strong> <span id="mStatus"></span></p>
+                <p><strong>Clasificación:</strong> <span id="mClasif"></span></p>
+                <p><strong>Comentario Admin:</strong> <span id="mComment"></span></p>
+            </div>
+
+            <div id="adminControls" class="hidden mt-6 border-t pt-4 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <select id="mAdminClasif" class="p-2 border rounded bg-white text-sm">
+                        <option value="">Sin Clasificar</option>
+                        <option value="Mejora de Proceso">Mejora de Proceso</option>
+                        <option value="Innovación Tecnológica">Innovación Tecnológica</option>
+                        <option value="Manual Admin">Manual Admin</option>
+                    </select>
+                    <select id="mAdminStatus" class="p-2 border rounded bg-white text-sm">
+                        <option value="Registrada">Registrada (Pendiente)</option>
+                        <option value="Revisada">Revisada (Completado)</option>
+                        <option value="En Ejecución">En Ejecución</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-sky-700 uppercase mb-1">Comentario Administrativo</label>
+                    <textarea id="mAdminComentario" rows="3" class="w-full p-2 border rounded bg-white text-sm" placeholder="Agrega observaciones internas..."></textarea>
+                </div>
+
+                <button onclick="guardarRevisionAdmin()" class="w-full bg-sky-600 text-white py-2 rounded-lg font-bold hover:bg-sky-700">Guardar Revisión</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const systemDescriptionText = "Es un sistema a través del cual se registran, revisan, clasifican y guardan las ideas de innovación para su posterior ejecución.";
+        let currentUser = null;
+        let currentIdeaIdEditing = null;
+        let adminCache = { pending: [], reviewed: [] };
+        let charts = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('systemDescription').innerText = systemDescriptionText;
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('formIdea').addEventListener('submit', handleIdeaSubmit);
+            document.getElementById('formAdminManual').addEventListener('submit', handleManualSubmit);
+            document.getElementById('adminIdEmp').addEventListener('input', (e) => buscarEmpleadoAdmin(e.target.value));
+            initApp();
+        });
+
+        async function apiFetch(url, options = {}) {
+            const headers = options.headers || {};
+            const finalOptions = {
+                credentials: 'include',
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...headers
+                }
+            };
+            return fetch(url, finalOptions);
+        }
+
+        async function initApp() {
+            const response = await apiFetch('/api/auth/me', { method: 'GET' });
+            if (response.ok) {
+                const user = await response.json();
+                setCurrentUser(user);
+            } else {
+                showLogin();
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const userName = document.getElementById('loginUser').value.trim();
+            const password = document.getElementById('loginPass').value;
+
+            const response = await apiFetch('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ userName, password })
+            });
+
+            if (!response.ok) {
+                showError('Error', 'Credenciales inválidas o usuario inactivo.');
+                return;
+            }
+
+            const user = await response.json();
+            setCurrentUser(user);
+        }
+
+        function setCurrentUser(user) {
+            currentUser = user;
+            document.getElementById('viewLogin').classList.add('hidden');
+            document.getElementById('btnLogout').classList.remove('hidden');
+
+            const roles = user.roles || [];
+            const roleLabel = roles.includes('Admin') ? '🛡️ Admin' : '👤 Ideador';
+            document.getElementById('userInfo').innerText = `${roleLabel} · ${user.nombreCompleto || user.userName}`;
+
+            if (roles.includes('Admin')) {
+                document.getElementById('viewAdmin').classList.remove('hidden');
+                document.getElementById('viewIdeador').classList.add('hidden');
+                navAdmin('dashboard');
+            } else {
+                document.getElementById('viewIdeador').classList.remove('hidden');
+                document.getElementById('viewAdmin').classList.add('hidden');
+                navIdeador('home');
+            }
+        }
+
+        async function logout() {
+            await apiFetch('/api/auth/logout', { method: 'POST' });
+            location.reload();
+        }
+
+        function showLogin() {
+            document.getElementById('viewLogin').classList.remove('hidden');
+            document.getElementById('viewIdeador').classList.add('hidden');
+            document.getElementById('viewAdmin').classList.add('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+            document.getElementById('userInfo').innerText = '';
+        }
+
+        function navIdeador(view) {
+            ['ideadorHome', 'ideadorForm', 'ideadorLista'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            if(view === 'home') document.getElementById('ideadorHome').classList.remove('hidden');
+            if(view === 'formulario') {
+                document.getElementById('ideadorForm').classList.remove('hidden');
+                limpiarFormulario();
+                cargarEmpleadoIdeador();
+            }
+            if(view === 'lista') {
+                document.getElementById('ideadorLista').classList.remove('hidden');
+                loadMyIdeas();
+            }
+        }
+
+        function navAdmin(view) {
+            ['adminDashboard', 'adminInbox', 'adminRevisadas', 'adminForm'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            if(view === 'dashboard') {
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                actualizarDashboard();
+            }
+            if(view === 'inbox') {
+                document.getElementById('adminInbox').classList.remove('hidden');
+                loadAdminInbox();
+            }
+            if(view === 'revisadas') {
+                document.getElementById('adminRevisadas').classList.remove('hidden');
+                loadAdminRevisadas();
+            }
+            if(view === 'registrar') document.getElementById('adminForm').classList.remove('hidden');
+        }
+
+        async function cargarEmpleadoIdeador() {
+            const response = await apiFetch('/api/employees/me', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            document.getElementById('idEmpleado').value = data.codigoEmpleado || currentUser.codigoEmpleado || '';
+            document.getElementById('nombreEmpleado').value = data.nombreCompleto || currentUser.nombreCompleto || '';
+            document.getElementById('correoEmpleado').value = data.email || '';
+            document.getElementById('direccionEmpleado').value = data.departamento || '';
+        }
+
+        function limpiarCampo(id) {
+            document.getElementById(id).value = '';
+            document.getElementById(id).focus();
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('formIdea').reset();
+        }
+
+        function cancelarProceso() {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '¿Cancelar?',
+                    text: "Se perderán los datos no guardados.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Sí, cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) navIdeador('home');
+                });
+            } else {
+                if(confirm("¿Cancelar? Se perderán los datos.")) navIdeador('home');
+            }
+        }
+
+        async function handleIdeaSubmit(e) {
+            e.preventDefault();
+            const desc = document.getElementById('descIdea').value.trim();
+            const detalle = document.getElementById('detalleIdea').value.trim();
+
+            const response = await apiFetch('/api/ideas', {
+                method: 'POST',
+                body: JSON.stringify({ descripcion: desc, detalle })
+            });
+
+            if (!response.ok) {
+                showError('Error', 'No fue posible registrar la idea.');
+                return;
+            }
+
+            const idea = await response.json();
+            showSuccess(`¡Idea Registrada!`, `Tu idea ha sido guardada con el ID: ${idea.id}`);
+            navIdeador('lista');
+        }
+
+        async function handleManualSubmit(e) {
+            e.preventDefault();
+            const payload = {
+                codigoEmpleado: document.getElementById('adminIdEmp').value.trim(),
+                descripcion: document.getElementById('adminDesc').value.trim(),
+                detalle: document.getElementById('adminDetalle').value.trim(),
+                via: document.getElementById('adminVia').value,
+                adminComment: 'Carga manual'
+            };
+
+            const response = await apiFetch('/api/admin/ideas/manual', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                showError('Error', 'No fue posible registrar la idea manual.');
+                return;
+            }
+
+            showSuccess('Registrada', 'La idea se guardó con estatus Revisada.');
+            document.getElementById('formAdminManual').reset();
+            navAdmin('dashboard');
+        }
+
+        async function loadMyIdeas() {
+            const response = await apiFetch('/api/ideas/mine', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const ideas = await response.json();
+            renderIdeadorList(ideas);
+        }
+
+        function renderIdeadorList(ideas) {
+            const tbody = document.getElementById('tablaMisIdeas');
+            tbody.innerHTML = '';
+            if (!ideas || ideas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">No has registrado ideas todavía.</td></tr>';
+                return;
+            }
+
+            ideas.forEach(idea => {
+                const fecha = new Date(idea.createdAt).toISOString().split('T')[0];
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4 font-bold text-slate-600">${idea.id}</td>
+                        <td class="p-4 text-slate-500">${fecha}</td>
+                        <td class="p-4 font-medium text-slate-800">${idea.descripcion}</td>
+                        <td class="p-4"><span class="px-2 py-1 rounded text-xs font-bold ${getColorStatus(idea.status)}">${idea.status}</span></td>
+                        <td class="p-4 text-center"><button onclick="mostrarDetalle(${idea.id})" class="text-blue-600 hover:text-blue-800">👁️ Ver</button></td>
+                    </tr>`;
+            });
+        }
+
+        async function mostrarDetalle(id, modoAdmin = false) {
+            const endpoint = modoAdmin ? `/api/admin/ideas/${id}` : `/api/ideas/${id}`;
+            const response = await apiFetch(endpoint, { method: 'GET' });
+            if (!response.ok) {
+                showError('Error', 'No fue posible cargar el detalle.');
+                return;
+            }
+            const idea = await response.json();
+            currentIdeaIdEditing = id;
+            document.getElementById('modalId').innerText = idea.id;
+            document.getElementById('mFecha').innerText = new Date(idea.createdAt).toISOString().split('T')[0];
+            document.getElementById('mUsuario').innerText = idea.nombreCompleto || idea.codigoEmpleado || '';
+            document.getElementById('mDesc').innerText = idea.descripcion;
+            document.getElementById('mDetalle').innerText = idea.detalle;
+            document.getElementById('mStatus').innerText = idea.status;
+            document.getElementById('mClasif').innerText = idea.clasificacion || '-';
+            document.getElementById('mComment').innerText = idea.adminComment || '-';
+
+            const adminPanel = document.getElementById('adminControls');
+            if(modoAdmin) {
+                adminPanel.classList.remove('hidden');
+                document.getElementById('mAdminClasif').value = idea.clasificacion || "";
+                document.getElementById('mAdminStatus').value = idea.status;
+                document.getElementById('mAdminComentario').value = idea.adminComment || "";
+            } else {
+                adminPanel.classList.add('hidden');
+            }
+            document.getElementById('modalDetalle').classList.remove('hidden');
+            document.getElementById('modalDetalle').classList.add('flex');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalDetalle').classList.add('hidden');
+            document.getElementById('modalDetalle').classList.remove('flex');
+            currentIdeaIdEditing = null;
+        }
+
+        async function guardarRevisionAdmin() {
+            if(!currentIdeaIdEditing) return;
+            const payload = {
+                status: document.getElementById('mAdminStatus').value,
+                clasificacion: document.getElementById('mAdminClasif').value,
+                adminComment: document.getElementById('mAdminComentario').value
+            };
+
+            const response = await apiFetch(`/api/admin/ideas/${currentIdeaIdEditing}/review`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                showError('Error', 'No fue posible guardar la revisión.');
+                return;
+            }
+
+            showSuccess('Guardado', 'Revisión actualizada');
+            cerrarModal();
+            loadAdminInbox();
+            loadAdminRevisadas();
+            actualizarDashboard();
+        }
+
+        async function loadAdminInbox() {
+            const response = await apiFetch('/api/admin/ideas/pending', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const ideas = await response.json();
+            adminCache.pending = ideas;
+            renderAdminInbox();
+        }
+
+        async function loadAdminRevisadas() {
+            const response = await apiFetch('/api/admin/ideas/reviewed', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const ideas = await response.json();
+            adminCache.reviewed = ideas;
+            renderAdminRevisadas();
+        }
+
+        function renderAdminInbox() {
+            const tbody = document.getElementById('tablaInbox');
+            tbody.innerHTML = '';
+            if(adminCache.pending.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400">No hay ideas nuevas pendientes.</td></tr>';
+                return;
+            }
+            adminCache.pending.forEach(idea => {
+                const fecha = new Date(idea.createdAt).toISOString().split('T')[0];
+                const nombre = idea.nombreCompleto || idea.codigoEmpleado;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-yellow-50 transition-colors">
+                        <td class="p-4 text-slate-500">${fecha}</td>
+                        <td class="p-4 font-bold text-slate-700">${nombre}</td>
+                        <td class="p-4 text-slate-600">${idea.descripcion}</td>
+                        <td class="p-4 text-center"><button onclick="mostrarDetalle(${idea.id}, true)" class="bg-blue-600 text-white px-3 py-1 rounded shadow text-xs hover:bg-blue-700">Revisar</button></td>
+                    </tr>`;
+            });
+        }
+
+        function renderAdminRevisadas() {
+            const tbody = document.getElementById('tablaRevisadas');
+            tbody.innerHTML = '';
+            if(adminCache.reviewed.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">No hay ideas revisadas.</td></tr>';
+                return;
+            }
+            adminCache.reviewed.forEach(idea => {
+                const fecha = new Date(idea.createdAt).toISOString().split('T')[0];
+                const nombre = idea.nombreCompleto || idea.codigoEmpleado;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-green-50 transition-colors">
+                        <td class="p-4 text-slate-500">${fecha}</td>
+                        <td class="p-4 font-bold text-slate-700">${nombre}</td>
+                        <td class="p-4 text-slate-600">${idea.descripcion}</td>
+                        <td class="p-4 text-xs font-bold text-sky-600">${idea.clasificacion || '-'}</td>
+                        <td class="p-4 text-center"><button onclick="mostrarDetalle(${idea.id}, true)" class="text-slate-400 hover:text-blue-600">📝 Editar</button></td>
+                    </tr>`;
+            });
+        }
+
+        function getColorStatus(status) {
+            if(status === 'Registrada') return 'bg-yellow-100 text-yellow-800';
+            if(status === 'Revisada') return 'bg-green-100 text-green-800';
+            return 'bg-slate-100 text-slate-800';
+        }
+
+        async function actualizarDashboard() {
+            const response = await apiFetch('/api/admin/dashboard', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            document.getElementById('kpiTotalIdeas').innerText = data.total;
+            document.getElementById('kpiPendientes').innerText = data.pendientes;
+            document.getElementById('kpiAprobadas').innerText = data.revisadas;
+            document.getElementById('kpiUsuarios').innerText = data.usuariosActivos;
+            actualizarGraficos(data);
+        }
+
+        function actualizarGraficos(data) {
+            const ctxStatus = document.getElementById('chartStatus');
+            const ctxClasif = document.getElementById('chartClasificacion');
+            if(!ctxStatus || !ctxClasif) return;
+
+            const statusLookup = {};
+            (data.porStatus || []).forEach(item => statusLookup[item.label] = item.count);
+            const countRevisadas = statusLookup['Revisada'] || 0;
+            const countRegistradas = statusLookup['Registrada'] || 0;
+            const countEjecucion = statusLookup['En Ejecución'] || 0;
+
+            const clasifLabels = (data.porClasificacion || []).map(item => item.label);
+            const clasifValues = (data.porClasificacion || []).map(item => item.count);
+
+            if(charts.status) charts.status.destroy();
+            if(charts.clasif) charts.clasif.destroy();
+
+            charts.status = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Revisadas', 'Registradas', 'En Ejecución'],
+                    datasets: [{
+                        data: [countRevisadas, countRegistradas, countEjecucion],
+                        backgroundColor: ['#22c55e', '#facc15', '#3b82f6']
+                    }]
+                }
+            });
+
+            charts.clasif = new Chart(ctxClasif, {
+                type: 'bar',
+                data: {
+                    labels: clasifLabels,
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: clasifValues,
+                        backgroundColor: '#0ea5e9'
+                    }]
+                }
+            });
+        }
+
+        async function buscarEmpleadoAdmin(valor) {
+            const codigo = valor.trim();
+            if (codigo.length < 3) {
+                return;
+            }
+            const response = await apiFetch(`/api/admin/employees/search?codigo=${encodeURIComponent(codigo)}`, { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const empleado = await response.json();
+            document.getElementById('adminNomEmp').value = empleado.nombreCompleto || '';
+            document.getElementById('adminMailEmp').value = empleado.email || '';
+            document.getElementById('adminDirEmp').value = empleado.departamento || '';
+        }
+
+        function showSuccess(title, text) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ title, text, icon: 'success', confirmButtonColor: '#16a34a' });
+            } else {
+                alert(`${title} ${text}`);
+            }
+        }
+
+        function showError(title, text) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ title, text, icon: 'error' });
+            } else {
+                alert(`${title} ${text}`);
+            }
+        }
+    </script>
+</body>
+</html>
