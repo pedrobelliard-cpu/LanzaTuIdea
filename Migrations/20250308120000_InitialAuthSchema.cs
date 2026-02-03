@@ -127,7 +127,7 @@ public partial class InitialAuthSchema : Migration
                     column: x => x.ChangedByUserId,
                     principalTable: "AppUsers",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.NoAction);
                 table.ForeignKey(
                     name: "FK_IdeaHistories_Ideas_IdeaId",
                     column: x => x.IdeaId,

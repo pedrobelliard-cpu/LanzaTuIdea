@@ -77,7 +77,8 @@ public class AppDbContext : DbContext
                 .HasForeignKey(h => h.IdeaId);
             entity.HasOne(h => h.ChangedByUser)
                 .WithMany()
-                .HasForeignKey(h => h.ChangedByUserId);
+                .HasForeignKey(h => h.ChangedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
     }
 }

@@ -237,7 +237,7 @@ public partial class AppDbContextModelSnapshot : ModelSnapshot
                 b.HasOne("LanzaTuIdea.Api.Models.AppUser", "ChangedByUser")
                     .WithMany()
                     .HasForeignKey("ChangedByUserId")
-                    .OnDelete(DeleteBehavior.Cascade)
+                    .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
 
                 b.HasOne("LanzaTuIdea.Api.Models.Idea", "Idea")
