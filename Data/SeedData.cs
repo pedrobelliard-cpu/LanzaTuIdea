@@ -94,10 +94,11 @@ public static class SeedData
             return;
         }
 
+        // Leer con Encoding por defecto (UTF8)
         var lines = await File.ReadAllLinesAsync(path);
         if (lines.Length <= 1)
         {
-            Console.WriteLine("--> [SeedData] El archivo CSV está vacío.");
+            Console.WriteLine("--> [SeedData] El archivo CSV está vacío o solo tiene cabecera.");
             return;
         }
 
@@ -109,56 +110,65 @@ public static class SeedData
         var employees = new List<Employee>();
         int skipped = 0;
 
-        // Procesar líneas
         foreach (var line in lines.Skip(1))
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
 
+            // Intento 1: Parser que respeta comillas
             var parts = ParseCsvLine(line, delimiter);
-            
-            // Validación básica de columnas (mínimo requerido)
+
+            // Intento 2 (Fallback): Si el parser devuelve 1 sola parte pero la línea tiene el delimitador,
+            // usamos Split simple. Esto arregla casos donde el formato es sencillo pero el parser falla.
+            if (parts.Count <= 1 && line.Contains(delimiter))
+            {
+                parts = line.Split(delimiter).Select(p => p.Trim()).ToList();
+            }
+
+            // Validación de columnas
             if (parts.Count < 5) 
             {
                 skipped++;
+                // LOG DE ERROR PARA VER QUÉ ESTÁ PASANDO REALMENTE
+                Console.WriteLine($"--> [ERROR FORMATO] Línea omitida. Se esperaban 5+ columnas, se encontraron {parts.Count}.");
+                Console.WriteLine($"    Contenido: '{line}'");
                 continue;
             }
 
-            // Mapeo seguro con Truncate para evitar desbordamientos
-            var employee = new Employee
+            try 
             {
-                Codigo_Empleado = Truncate(parts[0], 20),
-                Nombre          = parts.Count > 1 ? Truncate(parts[1], 100) : "",
-                Apellido1       = parts.Count > 2 ? Truncate(parts[2], 100) : "",
-                Apellido2       = parts.Count > 3 ? Truncate(parts[3], 100) : "",
-                E_Mail          = parts.Count > 4 ? Truncate(parts[4], 200) : "",
-                Departamento    = parts.Count > 5 ? Truncate(parts[5], 200) : "", // Aquí suelen estar las comas problemáticas
-                Estatus         = (parts.Count > 6 && !string.IsNullOrWhiteSpace(parts[6])) 
-                                  ? Truncate(parts[6], 5) 
-                                  : "A"
-            };
+                var employee = new Employee
+                {
+                    Codigo_Empleado = Truncate(parts[0], 20),
+                    Nombre          = parts.Count > 1 ? Truncate(parts[1], 100) : "",
+                    Apellido1       = parts.Count > 2 ? Truncate(parts[2], 100) : "",
+                    Apellido2       = parts.Count > 3 ? Truncate(parts[3], 100) : "",
+                    E_Mail          = parts.Count > 4 ? Truncate(parts[4], 200) : "",
+                    Departamento    = parts.Count > 5 ? Truncate(parts[5], 200) : "", 
+                    Estatus         = (parts.Count > 6 && !string.IsNullOrWhiteSpace(parts[6])) 
+                                      ? Truncate(parts[6], 5) 
+                                      : "A"
+                };
 
-            if (!string.IsNullOrWhiteSpace(employee.Codigo_Empleado))
+                if (!string.IsNullOrWhiteSpace(employee.Codigo_Empleado))
+                {
+                    employees.Add(employee);
+                }
+            }
+            catch (Exception ex)
             {
-                employees.Add(employee);
+                Console.WriteLine($"--> [ERROR MAPPING] Error al procesar línea: {line}. Error: {ex.Message}");
+                skipped++;
             }
         }
 
         if (employees.Count > 0)
         {
-            try 
-            {
-                context.Employees.AddRange(employees);
-                await context.SaveChangesAsync();
-                Console.WriteLine($"--> [SeedData] ÉXITO: Se cargaron {employees.Count} empleados.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"--> [SeedData] ERROR CRÍTICO AL GUARDAR: {ex.Message}");
-                if (ex.InnerException != null) Console.WriteLine($"    Detalle: {ex.InnerException.Message}");
-            }
+            context.Employees.AddRange(employees);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"--> [SeedData] ÉXITO: Se cargaron {employees.Count} empleados.");
         }
         
-        if (skipped > 0) Console.WriteLine($"--> [SeedData] Se omitieron {skipped} líneas por formato incorrecto.");
+        if (skipped > 0) Console.WriteLine($"--> [SeedData] Se omitieron {skipped} líneas por errores.");
     }
 
     // Parser manual que respeta comillas y acepta delimitador dinámico
