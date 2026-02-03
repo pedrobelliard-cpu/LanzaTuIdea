@@ -26,8 +26,10 @@ public class AdminController : ControllerBase
     [HttpGet("ideas/pending")]
     public async Task<ActionResult<IReadOnlyList<IdeaAdminSummaryDto>>> PendingIdeas(CancellationToken cancellationToken)
     {
-        var ideas = await GetAdminIdeaQuery(_context.Ideas.AsNoTracking().Where(i => i.Status == "Registrada"))
-            .OrderByDescending(i => i.CreatedAt)
+        var ideas = await GetAdminIdeaQuery(_context.Ideas
+                .AsNoTracking()
+                .Where(i => i.Status == "Registrada")
+                .OrderByDescending(i => i.CreatedAt))
             .ToListAsync(cancellationToken);
 
         return ideas;
@@ -36,8 +38,10 @@ public class AdminController : ControllerBase
     [HttpGet("ideas/reviewed")]
     public async Task<ActionResult<IReadOnlyList<IdeaAdminSummaryDto>>> ReviewedIdeas(CancellationToken cancellationToken)
     {
-        var ideas = await GetAdminIdeaQuery(_context.Ideas.AsNoTracking().Where(i => i.Status != "Registrada"))
-            .OrderByDescending(i => i.CreatedAt)
+        var ideas = await GetAdminIdeaQuery(_context.Ideas
+                .AsNoTracking()
+                .Where(i => i.Status != "Registrada")
+                .OrderByDescending(i => i.CreatedAt))
             .ToListAsync(cancellationToken);
 
         return ideas;
