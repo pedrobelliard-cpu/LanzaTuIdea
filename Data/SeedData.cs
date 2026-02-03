@@ -78,11 +78,7 @@ public static class SeedData
 
     private static async Task ImportEmployeesIfEmptyAsync(AppDbContext context, IConfiguration configuration)
     {
-        if (await context.Employees.AnyAsync())
-        {
-            Console.WriteLine("--> [SeedData] La tabla Employees ya tiene datos. Se omite la carga.");
-            return;
-        }
+        await context.Database.ExecuteSqlRawAsync("DELETE FROM Employees");
 
         var root = configuration["Seed:EmployeesPath"] ?? Path.Combine(AppContext.BaseDirectory, "seed", "empleados.csv");
         var path = File.Exists(root) ? root : Path.Combine(Directory.GetCurrentDirectory(), "seed", "empleados.csv");
@@ -132,16 +128,19 @@ public static class SeedData
 
             try 
             {
+                // Función auxiliar interna para limpiar comillas y espacios
+                string Clean(string? value) => value?.Trim().Trim('"').Trim() ?? "";
+
                 var employee = new Employee
                 {
-                    Codigo_Empleado = Truncate(parts[0], 20),
-                    Nombre          = parts.Count > 1 ? Truncate(parts[1], 100) : "",
-                    Apellido1       = parts.Count > 2 ? Truncate(parts[2], 100) : "",
-                    Apellido2       = parts.Count > 3 ? Truncate(parts[3], 100) : "",
-                    E_Mail          = parts.Count > 4 ? Truncate(parts[4], 200) : "",
-                    Departamento    = parts.Count > 5 ? Truncate(parts[5], 200) : "", 
+                    Codigo_Empleado = Truncate(Clean(parts[0]), 20),
+                    Nombre          = parts.Count > 1 ? Truncate(Clean(parts[1]), 100) : "",
+                    Apellido1       = parts.Count > 2 ? Truncate(Clean(parts[2]), 100) : "",
+                    Apellido2       = parts.Count > 3 ? Truncate(Clean(parts[3]), 100) : "",
+                    E_Mail          = parts.Count > 4 ? Truncate(Clean(parts[4]), 200) : "",
+                    Departamento    = parts.Count > 5 ? Truncate(Clean(parts[5]), 200) : "", 
                     Estatus         = (parts.Count > 6 && !string.IsNullOrWhiteSpace(parts[6])) 
-                                      ? Truncate(parts[6], 5) 
+                                      ? Truncate(Clean(parts[6]), 5) 
                                       : "A"
                 };
 
