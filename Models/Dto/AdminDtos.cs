@@ -23,6 +23,8 @@ public record UpdateRolesRequest(IReadOnlyList<string> Roles);
 
 public record UpdateActiveRequest(bool IsActive);
 
+public record CreateUserRequest(string UserName, string? Role);
+
 public record EmployeeLookupDto(
     string CodigoEmpleado,
     string? NombreCompleto,

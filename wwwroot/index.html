@@ -57,7 +57,7 @@
                     <input type="password" id="loginPass" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu contraseña" required>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Entrar</button>
-                <p class="text-xs text-slate-400 text-center">El rol (Ideador o Admin) se asigna automáticamente según tus permisos.</p>
+                <p class="text-xs text-slate-400 text-center">El rol (Admin o Gestor) se asigna desde el panel administrativo.</p>
             </form>
         </div>
     </div>
@@ -168,6 +168,15 @@
         </div>
     </main>
 
+    <main id="viewGestor" class="hidden max-w-4xl mx-auto w-full p-6 space-y-6 fade-in">
+        <div class="bg-white rounded-3xl shadow-lg border border-slate-200 p-8 space-y-6 text-center">
+            <div class="text-6xl">🧭</div>
+            <h2 class="text-2xl font-bold text-slate-700">Panel de Gestores en construcción</h2>
+            <p class="text-slate-500">Estamos trabajando en un panel exclusivo para gestores. Mientras tanto, puedes registrar ideas como ideador.</p>
+            <button onclick="abrirFormularioGestor()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700">Registrar una idea</button>
+        </div>
+    </main>
+
     <main id="viewAdmin" class="hidden max-w-7xl mx-auto w-full p-6 space-y-6 fade-in">
 
         <div id="adminDashboard">
@@ -177,6 +186,7 @@
                     <button onclick="navAdmin('registrar')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700">Registrar Idea (Manual)</button>
                     <button onclick="navAdmin('inbox')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">📥 Ideas Registradas</button>
                     <button onclick="navAdmin('revisadas')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">✅ Ideas Revisadas</button>
+                    <button onclick="navAdmin('usuarios')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">👥 Usuarios y Roles</button>
                 </div>
             </div>
 
@@ -305,6 +315,62 @@
                 <button type="submit" class="w-full bg-sky-600 text-white py-3 rounded-lg font-bold hover:bg-sky-700">Registrar Idea Manual</button>
             </form>
         </div>
+
+        <div id="adminUsers" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-700">👥 Usuarios y Roles</h3>
+                <div class="flex items-center gap-3">
+                    <button onclick="abrirModalCrearUsuario()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">➕ Agregar usuario</button>
+                    <button onclick="navAdmin('dashboard')" class="text-sm font-bold text-slate-500 hover:text-blue-600">← Volver al dashboard</button>
+                </div>
+            </div>
+            <div class="p-8">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-slate-500">
+                                <th class="p-3">Usuario</th>
+                                <th class="p-3">Código</th>
+                                <th class="p-3">Nombre</th>
+                                <th class="p-3">Rol</th>
+                                <th class="p-3">Estado</th>
+                                <th class="p-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuarios">
+                            <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando usuarios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalCrearUsuario" class="hidden fixed inset-0 bg-black/40 items-center justify-center z-50">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+                <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                    <h4 class="text-lg font-bold text-slate-700">➕ Nuevo usuario</h4>
+                    <button onclick="cerrarModalCrearUsuario()" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre de usuario</label>
+                        <input type="text" id="nuevoUserName" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="usuario" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Rol</label>
+                        <select id="nuevoUserRole" class="w-full p-3 border rounded-xl bg-white">
+                            <option value="">Ideador (sin rol)</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Gestor">Gestor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-slate-200 flex justify-end gap-3">
+                    <button onclick="cerrarModalCrearUsuario()" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
+                    <button onclick="crearUsuarioAdmin()" class="px-4 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white hover:bg-blue-700">Guardar</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <div id="modalDetalle" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
@@ -411,16 +477,24 @@
             document.getElementById('btnLogout').classList.remove('hidden');
 
             const roles = user.roles || [];
-            const roleLabel = roles.includes('Admin') ? '🛡️ Admin' : '👤 Ideador';
+            const isAdmin = roles.includes('Admin');
+            const isGestor = roles.includes('Gestor');
+            const roleLabel = isAdmin ? '🛡️ Admin' : isGestor ? '🧭 Gestor' : '👤 Ideador';
             document.getElementById('userInfo').innerText = `${roleLabel} · ${user.nombreCompleto || user.userName}`;
 
-            if (roles.includes('Admin')) {
+            if (isAdmin) {
                 document.getElementById('viewAdmin').classList.remove('hidden');
                 document.getElementById('viewIdeador').classList.add('hidden');
+                document.getElementById('viewGestor').classList.add('hidden');
                 navAdmin('dashboard');
+            } else if (isGestor) {
+                document.getElementById('viewGestor').classList.remove('hidden');
+                document.getElementById('viewIdeador').classList.add('hidden');
+                document.getElementById('viewAdmin').classList.add('hidden');
             } else {
                 document.getElementById('viewIdeador').classList.remove('hidden');
                 document.getElementById('viewAdmin').classList.add('hidden');
+                document.getElementById('viewGestor').classList.add('hidden');
                 navIdeador('home');
             }
         }
@@ -434,11 +508,20 @@
             document.getElementById('viewLogin').classList.remove('hidden');
             document.getElementById('viewIdeador').classList.add('hidden');
             document.getElementById('viewAdmin').classList.add('hidden');
+            document.getElementById('viewGestor').classList.add('hidden');
             document.getElementById('btnLogout').classList.add('hidden');
             document.getElementById('userInfo').innerText = '';
         }
 
         function navIdeador(view) {
+            const roles = currentUser?.roles || [];
+            if (view === 'home' && roles.includes('Gestor')) {
+                document.getElementById('viewGestor').classList.remove('hidden');
+                document.getElementById('viewIdeador').classList.add('hidden');
+                return;
+            }
+            document.getElementById('viewIdeador').classList.remove('hidden');
+            document.getElementById('viewGestor').classList.add('hidden');
             ['ideadorHome', 'ideadorForm', 'ideadorLista'].forEach(id => document.getElementById(id).classList.add('hidden'));
             if(view === 'home') document.getElementById('ideadorHome').classList.remove('hidden');
             if(view === 'formulario') {
@@ -453,7 +536,7 @@
         }
 
         function navAdmin(view) {
-            ['adminDashboard', 'adminInbox', 'adminRevisadas', 'adminForm'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['adminDashboard', 'adminInbox', 'adminRevisadas', 'adminForm', 'adminUsers'].forEach(id => document.getElementById(id).classList.add('hidden'));
             if(view === 'dashboard') {
                 document.getElementById('adminDashboard').classList.remove('hidden');
                 actualizarDashboard();
@@ -466,19 +549,56 @@
                 document.getElementById('adminRevisadas').classList.remove('hidden');
                 loadAdminRevisadas();
             }
+            if(view === 'usuarios') {
+                document.getElementById('adminUsers').classList.remove('hidden');
+                loadAdminUsers();
+            }
             if(view === 'registrar') document.getElementById('adminForm').classList.remove('hidden');
         }
 
-        async function cargarEmpleadoIdeador() {
-            const response = await apiFetch('/api/employees/me', { method: 'GET' });
-            if (!response.ok) {
-                return;
+        function abrirFormularioGestor() {
+            navIdeador('formulario');
+        }
+
+        function setFieldEditable(id, isEditable) {
+            const input = document.getElementById(id);
+            input.readOnly = !isEditable;
+            if (isEditable) {
+                input.classList.remove('bg-slate-200', 'border-slate-300', 'text-slate-600');
+                input.classList.add('bg-white', 'border-slate-300', 'text-slate-700');
+            } else {
+                input.classList.add('bg-slate-200', 'border-slate-300', 'text-slate-600');
+                input.classList.remove('bg-white', 'text-slate-700');
             }
-            const data = await response.json();
-            document.getElementById('idEmpleado').value = data.codigoEmpleado || currentUser.codigoEmpleado || '';
-            document.getElementById('nombreEmpleado').value = data.nombreCompleto || currentUser.nombreCompleto || '';
+        }
+
+        function ajustarCamposIdeador(data) {
+            const hasEmployee = data.employeeExists;
+            const hasNombre = Boolean(data.nombreCompleto);
+            const hasCorreo = Boolean(data.email);
+            const hasDepartamento = Boolean(data.departamento);
+
+            setFieldEditable('nombreEmpleado', !hasEmployee || !hasNombre);
+            setFieldEditable('correoEmpleado', !hasEmployee || !hasCorreo);
+            setFieldEditable('direccionEmpleado', !hasEmployee || !hasDepartamento);
+        }
+
+        async function cargarEmpleadoIdeador() {
+            let data = currentUser;
+            if (!data) {
+                const response = await apiFetch('/api/auth/me', { method: 'GET' });
+                if (!response.ok) {
+                    return;
+                }
+                data = await response.json();
+                currentUser = data;
+            }
+
+            document.getElementById('idEmpleado').value = data.codigoEmpleado || '';
+            document.getElementById('nombreEmpleado').value = data.nombreCompleto || '';
             document.getElementById('correoEmpleado').value = data.email || '';
             document.getElementById('direccionEmpleado').value = data.departamento || '';
+            ajustarCamposIdeador(data);
         }
 
         function limpiarCampo(id) {
@@ -512,9 +632,17 @@
             const desc = document.getElementById('descIdea').value.trim();
             const detalle = document.getElementById('detalleIdea').value.trim();
 
+            const payload = {
+                descripcion: desc,
+                detalle,
+                nombreCompleto: document.getElementById('nombreEmpleado').value.trim(),
+                email: document.getElementById('correoEmpleado').value.trim(),
+                departamento: document.getElementById('direccionEmpleado').value.trim()
+            };
+
             const response = await apiFetch('/api/ideas', {
                 method: 'POST',
-                body: JSON.stringify({ descripcion: desc, detalle })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
@@ -534,7 +662,10 @@
                 descripcion: document.getElementById('adminDesc').value.trim(),
                 detalle: document.getElementById('adminDetalle').value.trim(),
                 via: document.getElementById('adminVia').value,
-                adminComment: 'Carga manual'
+                adminComment: 'Carga manual',
+                nombreCompleto: document.getElementById('adminNomEmp').value.trim(),
+                email: document.getElementById('adminMailEmp').value.trim(),
+                departamento: document.getElementById('adminDirEmp').value.trim()
             };
 
             const response = await apiFetch('/api/admin/ideas/manual', {
@@ -765,12 +896,159 @@
             });
         }
 
+        async function loadAdminUsers() {
+            const response = await apiFetch('/api/admin/users', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const users = await response.json();
+            renderAdminUsers(users);
+        }
+
+        function renderAdminUsers(users) {
+            const tbody = document.getElementById('tablaUsuarios');
+            tbody.innerHTML = '';
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay usuarios registrados.</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const roles = user.roles || [];
+                const currentRole = roles.includes('Admin') ? 'Admin' : roles.includes('Gestor') ? 'Gestor' : '';
+                const estado = user.isActive ? 'Activo' : 'Inactivo';
+                const row = document.createElement('tr');
+                row.className = 'border-t border-slate-100';
+                row.innerHTML = `
+                    <td class="p-3 font-medium text-slate-700">${user.userName}</td>
+                    <td class="p-3 text-slate-500">${user.codigoEmpleado || '-'}</td>
+                    <td class="p-3 text-slate-500">${user.nombreCompleto || '-'}</td>
+                    <td class="p-3">
+                        <select class="w-full p-2 border rounded-lg text-sm">
+                            <option value="">Ideador (sin rol)</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Gestor">Gestor</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-slate-500">${estado}</td>
+                    <td class="p-3">
+                        <div class="flex items-center justify-end gap-2">
+                            <button class="px-3 py-1 rounded-lg text-xs font-bold ${user.isActive ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
+                                ${user.isActive ? 'Desactivar' : 'Activar'}
+                            </button>
+                            <button class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700">Eliminar</button>
+                        </div>
+                    </td>
+                `;
+                const select = row.querySelector('select');
+                select.value = currentRole;
+                select.addEventListener('change', () => actualizarRolUsuario(user.userName, select.value));
+                const buttons = row.querySelectorAll('button');
+                const toggleButton = buttons[0];
+                const deleteButton = buttons[1];
+                toggleButton.addEventListener('click', () => actualizarEstadoUsuario(user.userName, !user.isActive));
+                deleteButton.addEventListener('click', () => eliminarUsuario(user.userName));
+                tbody.appendChild(row);
+            });
+        }
+
+        async function actualizarRolUsuario(userName, role) {
+            const roles = role ? [role] : [];
+            const response = await apiFetch(`/api/admin/users/${encodeURIComponent(userName)}/roles`, {
+                method: 'PUT',
+                body: JSON.stringify({ roles })
+            });
+            if (!response.ok) {
+                showError('Error', 'No fue posible actualizar el rol del usuario.');
+                return;
+            }
+            loadAdminUsers();
+        }
+
+        function abrirModalCrearUsuario() {
+            document.getElementById('nuevoUserName').value = '';
+            document.getElementById('nuevoUserRole').value = '';
+            document.getElementById('modalCrearUsuario').classList.remove('hidden');
+            document.getElementById('modalCrearUsuario').classList.add('flex');
+        }
+
+        function cerrarModalCrearUsuario() {
+            document.getElementById('modalCrearUsuario').classList.add('hidden');
+            document.getElementById('modalCrearUsuario').classList.remove('flex');
+        }
+
+        async function crearUsuarioAdmin() {
+            const userName = document.getElementById('nuevoUserName').value.trim();
+            const role = document.getElementById('nuevoUserRole').value;
+            if (!userName) {
+                showError('Error', 'El nombre de usuario es requerido.');
+                return;
+            }
+
+            const response = await apiFetch('/api/admin/users', {
+                method: 'POST',
+                body: JSON.stringify({ userName, role })
+            });
+
+            if (!response.ok) {
+                showError('Error', 'No fue posible crear el usuario.');
+                return;
+            }
+
+            cerrarModalCrearUsuario();
+            loadAdminUsers();
+            showSuccess('Usuario creado', 'El usuario fue agregado correctamente.');
+        }
+
+        async function actualizarEstadoUsuario(userName, isActive) {
+            const response = await apiFetch(`/api/admin/users/${encodeURIComponent(userName)}/active`, {
+                method: 'PUT',
+                body: JSON.stringify({ isActive })
+            });
+            if (!response.ok) {
+                showError('Error', 'No fue posible actualizar el estado del usuario.');
+                return;
+            }
+            loadAdminUsers();
+        }
+
+        async function eliminarUsuario(userName) {
+            if (!confirm(`¿Eliminar el usuario ${userName}?`)) {
+                return;
+            }
+
+            const response = await apiFetch(`/api/admin/users/${encodeURIComponent(userName)}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                showError('Error', 'No fue posible eliminar el usuario.');
+                return;
+            }
+            loadAdminUsers();
+        }
+
+        function ajustarCamposAdmin(empleado) {
+            const hasNombre = Boolean(empleado?.nombreCompleto);
+            const hasCorreo = Boolean(empleado?.email);
+            const hasDepartamento = Boolean(empleado?.departamento);
+            setFieldEditable('adminNomEmp', !hasNombre);
+            setFieldEditable('adminMailEmp', !hasCorreo);
+            setFieldEditable('adminDirEmp', !hasDepartamento);
+        }
+
         async function buscarEmpleadoAdmin(valor) {
             const codigo = valor.trim();
             if (codigo.length < 3) {
                 return;
             }
             const response = await apiFetch(`/api/admin/employees/search?codigo=${encodeURIComponent(codigo)}`, { method: 'GET' });
+            if (response.status === 404) {
+                document.getElementById('adminNomEmp').value = '';
+                document.getElementById('adminMailEmp').value = '';
+                document.getElementById('adminDirEmp').value = '';
+                ajustarCamposAdmin(null);
+                return;
+            }
             if (!response.ok) {
                 return;
             }
@@ -778,6 +1056,7 @@
             document.getElementById('adminNomEmp').value = empleado.nombreCompleto || '';
             document.getElementById('adminMailEmp').value = empleado.email || '';
             document.getElementById('adminDirEmp').value = empleado.departamento || '';
+            ajustarCamposAdmin(empleado);
         }
 
         function showSuccess(title, text) {

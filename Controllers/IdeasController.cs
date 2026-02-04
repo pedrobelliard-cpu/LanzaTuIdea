@@ -1,8 +1,11 @@
 using LanzaTuIdea.Api.Data;
+using LanzaTuIdea.Api.Models;
 using LanzaTuIdea.Api.Models.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Security.Claims;
 
 namespace LanzaTuIdea.Api.Controllers;
 
@@ -30,7 +33,11 @@ public class IdeasController : ControllerBase
         var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
         if (user is null)
         {
-            return Unauthorized();
+            user = await CreateUserFromClaimsAsync(userName, cancellationToken);
+            if (user is null)
+            {
+                return Unauthorized();
+            }
         }
 
         var ideas = await _context.Ideas
@@ -64,8 +71,15 @@ public class IdeasController : ControllerBase
         var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
         if (user is null)
         {
-            return Unauthorized();
+            user = await CreateUserFromClaimsAsync(userName, cancellationToken);
+            if (user is null)
+            {
+                return Unauthorized();
+            }
         }
+
+        await EnsureRoleAsync(user, "Ideador", cancellationToken);
+        await UpsertEmployeeAsync(user.Codigo_Empleado, request, user, cancellationToken);
 
         var codigoEmpleado = user.Codigo_Empleado ?? string.Empty;
         var idea = new Models.Idea
@@ -146,5 +160,135 @@ public class IdeasController : ControllerBase
             idea.CodigoEmpleado,
             idea.CreatedByUser.NombreCompleto,
             history);
+    }
+
+    private async Task<AppUser?> CreateUserFromClaimsAsync(string userName, CancellationToken cancellationToken)
+    {
+        var codigoEmpleado = User.FindFirstValue("CodigoEmpleado");
+        var nombreCompleto = User.FindFirstValue("NombreCompleto");
+
+        if (string.IsNullOrWhiteSpace(codigoEmpleado))
+        {
+            return null;
+        }
+
+        var user = new AppUser
+        {
+            UserName = userName,
+            Codigo_Empleado = codigoEmpleado,
+            NombreCompleto = nombreCompleto,
+            IsActive = true,
+            LastLoginAt = DateTime.UtcNow
+        };
+
+        _context.AppUsers.Add(user);
+        await _context.SaveChangesAsync(cancellationToken);
+        return user;
+    }
+
+    private async Task EnsureRoleAsync(AppUser user, string roleName, CancellationToken cancellationToken)
+    {
+        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
+        if (role is null)
+        {
+            role = new Role { Name = roleName };
+            _context.Roles.Add(role);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        var hasRole = await _context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == role.Id, cancellationToken);
+        if (!hasRole)
+        {
+            _context.UserRoles.Add(new UserRole { RoleId = role.Id, UserId = user.Id });
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task UpsertEmployeeAsync(string? codigoEmpleado, IdeaCreateRequest request, AppUser user, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(codigoEmpleado))
+        {
+            return;
+        }
+
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Codigo_Empleado == codigoEmpleado, cancellationToken);
+        var nombreCompleto = request.NombreCompleto ?? user.NombreCompleto ?? string.Empty;
+        var parsed = ParseNombreCompleto(nombreCompleto);
+        var email = request.Email ?? string.Empty;
+        var departamento = request.Departamento ?? string.Empty;
+
+        if (employee is null)
+        {
+            employee = new Employee
+            {
+                Codigo_Empleado = codigoEmpleado,
+                Nombre = parsed.Nombre,
+                Apellido1 = parsed.Apellido1,
+                Apellido2 = parsed.Apellido2,
+                E_Mail = email,
+                Departamento = departamento,
+                Estatus = "A"
+            };
+            _context.Employees.Add(employee);
+            await _context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        var updated = false;
+        if (string.IsNullOrWhiteSpace(employee.Nombre) && !string.IsNullOrWhiteSpace(parsed.Nombre))
+        {
+            employee.Nombre = parsed.Nombre;
+            updated = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(employee.Apellido1) && !string.IsNullOrWhiteSpace(parsed.Apellido1))
+        {
+            employee.Apellido1 = parsed.Apellido1;
+            updated = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(employee.Apellido2) && !string.IsNullOrWhiteSpace(parsed.Apellido2))
+        {
+            employee.Apellido2 = parsed.Apellido2;
+            updated = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(employee.E_Mail) && !string.IsNullOrWhiteSpace(email))
+        {
+            employee.E_Mail = email;
+            updated = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(employee.Departamento) && !string.IsNullOrWhiteSpace(departamento))
+        {
+            employee.Departamento = departamento;
+            updated = true;
+        }
+
+        if (updated)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private static (string Nombre, string Apellido1, string Apellido2) ParseNombreCompleto(string nombreCompleto)
+    {
+        if (string.IsNullOrWhiteSpace(nombreCompleto))
+        {
+            return ("", "", "");
+        }
+
+        var parts = nombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+        {
+            return (parts[0], "", "");
+        }
+
+        if (parts.Length == 2)
+        {
+            return (parts[0], parts[1], "");
+        }
+
+        return (parts[0], parts[1], string.Join(" ", parts.Skip(2)));
     }
 }

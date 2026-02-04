@@ -88,11 +88,13 @@ public class AuthController : ControllerBase
         await _context.SaveChangesAsync(cancellationToken);
 
         var roles = user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList();
+        var employee = await GetEmployeeAsync(user.Codigo_Empleado, cancellationToken);
+        var nombreCompleto = employee?.NombreCompleto ?? user.NombreCompleto;
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, user.UserName),
             new("CodigoEmpleado", user.Codigo_Empleado ?? string.Empty),
-            new("NombreCompleto", user.NombreCompleto ?? string.Empty)
+            new("NombreCompleto", nombreCompleto ?? string.Empty)
         };
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
@@ -101,7 +103,14 @@ public class AuthController : ControllerBase
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-        return Ok(new UserInfoDto(user.UserName, user.Codigo_Empleado, user.NombreCompleto, roles));
+        return Ok(new UserInfoDto(
+            user.UserName,
+            user.Codigo_Empleado,
+            nombreCompleto,
+            roles,
+            employee?.E_Mail,
+            employee?.Departamento,
+            employee is not null));
     }
 
     [Authorize]
@@ -125,7 +134,16 @@ public class AuthController : ControllerBase
         }
 
         var roles = user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList();
-        return new UserInfoDto(user.UserName, user.Codigo_Empleado, user.NombreCompleto, roles);
+        var employee = await GetEmployeeAsync(user.Codigo_Empleado, cancellationToken);
+        var nombreCompleto = employee?.NombreCompleto ?? user.NombreCompleto;
+        return new UserInfoDto(
+            user.UserName,
+            user.Codigo_Empleado,
+            nombreCompleto,
+            roles,
+            employee?.E_Mail,
+            employee?.Departamento,
+            employee is not null);
     }
 
     [Authorize]
@@ -150,5 +168,17 @@ public class AuthController : ControllerBase
         {
             user.UserRoles.Add(new UserRole { RoleId = role.Id, UserId = user.Id, Role = role, User = user });
         }
+    }
+
+    private async Task<Employee?> GetEmployeeAsync(string? codigoEmpleado, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(codigoEmpleado))
+        {
+            return null;
+        }
+
+        return await _context.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Codigo_Empleado == codigoEmpleado, cancellationToken);
     }
 }
