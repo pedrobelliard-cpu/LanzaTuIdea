@@ -13,6 +13,8 @@
         body { font-family: 'Inter', sans-serif; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
 
         /* Colores Botones */
         .btn-registar { background-color: #16a34a; color: white; } /* Verde */
@@ -373,42 +375,52 @@
         </div>
     </main>
 
-    <div id="modalDetalle" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
-        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
-            <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500">✖</button>
-            <h3 class="text-xl font-bold text-slate-700 mb-2">Detalle de Idea</h3>
-            <div class="space-y-2 text-sm text-slate-600">
-                <p><strong>ID:</strong> <span id="modalId"></span></p>
-                <p><strong>Fecha:</strong> <span id="mFecha"></span></p>
-                <p><strong>Usuario:</strong> <span id="mUsuario"></span></p>
-                <p><strong>Descripción:</strong> <span id="mDesc"></span></p>
-                <p><strong>Detalle:</strong> <span id="mDetalle"></span></p>
-                <p><strong>Estatus:</strong> <span id="mStatus"></span></p>
-                <p><strong>Clasificación:</strong> <span id="mClasif"></span></p>
-                <p><strong>Comentario Admin:</strong> <span id="mComment"></span></p>
+    <div id="modalDetalle" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold">Detalle de la Idea <span id="modalId" class="text-blue-300 ml-2"></span></h3>
+                <button onclick="cerrarModal()" class="text-white hover:text-red-400 font-bold text-xl">✕</button>
             </div>
-
-            <div id="adminControls" class="hidden mt-6 border-t pt-4 space-y-3">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <select id="mAdminClasif" class="p-2 border rounded bg-white text-sm">
-                        <option value="">Sin Clasificar</option>
-                        <option value="Mejora de Proceso">Mejora de Proceso</option>
-                        <option value="Innovación Tecnológica">Innovación Tecnológica</option>
-                        <option value="Manual Admin">Manual Admin</option>
-                    </select>
-                    <select id="mAdminStatus" class="p-2 border rounded bg-white text-sm">
-                        <option value="Registrada">Registrada (Pendiente)</option>
-                        <option value="Revisada">Revisada (Completado)</option>
-                        <option value="En Ejecución">En Ejecución</option>
-                    </select>
+            
+            <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="block text-xs font-bold text-slate-400 uppercase">Fecha</span><span id="mFecha" class="font-semibold"></span></div>
+                    <div><span class="block text-xs font-bold text-slate-400 uppercase">Usuario</span><span id="mUsuario" class="font-semibold"></span></div>
                 </div>
-
+                
+                <div class="bg-slate-50 p-4 rounded-xl border">
+                    <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Descripción</span>
+                    <p id="mDesc" class="text-slate-800 font-medium"></p>
+                </div>
+                
                 <div>
-                    <label class="block text-xs font-bold text-sky-700 uppercase mb-1">Comentario Administrativo</label>
-                    <textarea id="mAdminComentario" rows="3" class="w-full p-2 border rounded bg-white text-sm" placeholder="Agrega observaciones internas..."></textarea>
+                    <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Detalle Completo</span>
+                    <p id="mDetalle" class="text-slate-600 text-sm whitespace-pre-wrap"></p>
                 </div>
+                
+                <div id="adminControls" class="hidden border-t pt-4 mt-4 space-y-4">
+                    <h4 class="font-bold text-sky-700 text-sm uppercase">Gestión Administrativa</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <select id="mAdminClasif" class="p-2 border rounded bg-white text-sm">
+                            <option value="" disabled selected>Clasificar como...</option>
+                            <option value="Mejora de Proceso">Mejora de Proceso</option>
+                            <option value="Innovación Tecnológica">Innovación Tecnológica</option>
+                            <option value="Ahorro de Costos">Ahorro de Costos</option> <option value="Cultura Organizacional">Cultura Organizacional</option> <option value="Manual Admin">Manual Admin</option>
+                        </select>
+                        <select id="mAdminStatus" class="p-2 border rounded bg-white text-sm">
+                            <option value="Registrada">Registrada (Pendiente)</option>
+                            <option value="Revisada">Revisada (Completado)</option>
+                            <option value="En Ejecución">En Ejecución</option>
+                        </select>
+                    </div>
 
-                <button onclick="guardarRevisionAdmin()" class="w-full bg-sky-600 text-white py-2 rounded-lg font-bold hover:bg-sky-700">Guardar Revisión</button>
+                    <div>
+                        <label class="block text-xs font-bold text-sky-700 uppercase mb-1">Comentario Administrativo</label>
+                        <textarea id="mAdminComentario" rows="3" class="w-full p-2 border rounded bg-white text-sm" placeholder="Agrega observaciones internas..."></textarea>
+                    </div>
+
+                    <button onclick="guardarRevisionAdmin()" class="w-full bg-sky-600 text-white py-2 rounded-lg font-bold hover:bg-sky-700">Guardar Revisión</button>
+                </div>
             </div>
         </div>
     </div>
@@ -722,24 +734,35 @@
             }
             const idea = await response.json();
             currentIdeaIdEditing = id;
+
+            // Mapeo de campos básicos (Coinciden con MVP)
             document.getElementById('modalId').innerText = idea.id;
             document.getElementById('mFecha').innerText = new Date(idea.createdAt).toISOString().split('T')[0];
             document.getElementById('mUsuario').innerText = idea.nombreCompleto || idea.codigoEmpleado || '';
             document.getElementById('mDesc').innerText = idea.descripcion;
             document.getElementById('mDetalle').innerText = idea.detalle;
-            document.getElementById('mStatus').innerText = idea.status;
-            document.getElementById('mClasif').innerText = idea.clasificacion || '-';
-            document.getElementById('mComment').innerText = idea.adminComment || '-';
+
+            // NOTA: El MVP NO muestra Estatus/Clasificación/Comentario en modo lectura (texto plano).
+            // Solo se muestran en los controles de input si es Admin. 
+            // Se han eliminado las líneas que asignaban 'mStatus', 'mClasif', 'mComment'.
 
             const adminPanel = document.getElementById('adminControls');
-            if(modoAdmin) {
+
+            // Lógica de visualización del panel Admin
+            // Se agrega validación de rol 'Admin' local si está disponible en currentUser
+            const esAdminReal = currentUser && currentUser.roles && currentUser.roles.includes('Admin');
+
+            if(modoAdmin && esAdminReal) {
                 adminPanel.classList.remove('hidden');
+                // Pre-llenar los inputs del admin
                 document.getElementById('mAdminClasif').value = idea.clasificacion || "";
                 document.getElementById('mAdminStatus').value = idea.status;
                 document.getElementById('mAdminComentario').value = idea.adminComment || "";
             } else {
                 adminPanel.classList.add('hidden');
             }
+
+            // Mostrar el modal (Clases para Flexbox)
             document.getElementById('modalDetalle').classList.remove('hidden');
             document.getElementById('modalDetalle').classList.add('flex');
         }
