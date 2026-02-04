@@ -396,6 +396,20 @@ public class AdminController : ControllerBase
         return Ok();
     }
 
+    [HttpPut("users/{userName}/instance")]
+    public async Task<IActionResult> UpdateInstance(string userName, [FromBody] UpdateUserInstanceRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        user.Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim();
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok();
+    }
+
     [HttpGet("employees/search")]
     public async Task<ActionResult<EmployeeLookupDto>> SearchEmployee([FromQuery] string codigo, CancellationToken cancellationToken)
     {

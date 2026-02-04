@@ -26,6 +26,8 @@ public record UpdateActiveRequest(bool IsActive);
 
 public record CreateUserRequest(string UserName, string? Role, string? Instancia);
 
+public record UpdateUserInstanceRequest(string? Instancia);
+
 public record EmployeeLookupDto(
     string CodigoEmpleado,
     string? NombreCompleto,

@@ -1160,7 +1160,9 @@
                     <td class="p-3 font-medium text-slate-700">${user.userName}</td>
                     <td class="p-3 text-slate-500">${user.codigoEmpleado || '-'}</td>
                     <td class="p-3 text-slate-500">${user.nombreCompleto || '-'}</td>
-                    <td class="p-3 text-slate-500">${user.instancia || '-'}</td>
+                    <td class="p-3">
+                        <select class="w-full p-2 border rounded-lg text-sm"></select>
+                    </td>
                     <td class="p-3">
                         <select class="w-full p-2 border rounded-lg text-sm">
                             <option value="">Ideador (sin rol)</option>
@@ -1178,9 +1180,23 @@
                         </div>
                     </td>
                 `;
-                const select = row.querySelector('select');
-                select.value = currentRole;
-                select.addEventListener('change', () => actualizarRolUsuario(user.userName, select.value));
+                const selectList = row.querySelectorAll('select');
+                const instanceSelect = selectList[0];
+                const roleSelect = selectList[1];
+                const instancePlaceholder = document.createElement('option');
+                instancePlaceholder.value = '';
+                instancePlaceholder.textContent = 'Sin instancia';
+                instanceSelect.appendChild(instancePlaceholder);
+                (adminCache.instances || []).forEach(instance => {
+                    const option = document.createElement('option');
+                    option.value = instance;
+                    option.textContent = instance;
+                    instanceSelect.appendChild(option);
+                });
+                instanceSelect.value = user.instancia || '';
+                instanceSelect.addEventListener('change', () => actualizarInstanciaUsuario(user.userName, instanceSelect.value));
+                roleSelect.value = currentRole;
+                roleSelect.addEventListener('change', () => actualizarRolUsuario(user.userName, roleSelect.value));
                 const buttons = row.querySelectorAll('button');
                 const toggleButton = buttons[0];
                 const deleteButton = buttons[1];
@@ -1272,6 +1288,7 @@
                 return;
             }
             const items = await response.json();
+            adminCache.instances = items.map(item => item.nombre);
             const tbody = document.getElementById('tablaInstancias');
             tbody.innerHTML = '';
             if (!items || items.length === 0) {
@@ -1350,6 +1367,18 @@
             });
             if (!response.ok) {
                 showError('Error', 'No fue posible actualizar el rol del usuario.');
+                return;
+            }
+            loadAdminUsers();
+        }
+
+        async function actualizarInstanciaUsuario(userName, instancia) {
+            const response = await apiFetch(`/api/admin/users/${encodeURIComponent(userName)}/instance`, {
+                method: 'PUT',
+                body: JSON.stringify({ instancia })
+            });
+            if (!response.ok) {
+                showError('Error', 'No fue posible actualizar la instancia del usuario.');
                 return;
             }
             loadAdminUsers();
