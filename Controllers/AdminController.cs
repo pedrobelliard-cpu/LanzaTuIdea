@@ -5,22 +5,25 @@ using LanzaTuIdea.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 
 namespace LanzaTuIdea.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = AppConstants.Roles.Admin)]
 [Route("api/admin")]
 public class AdminController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IAdServiceClient _adServiceClient;
+    private readonly ILogger<AdminController> _logger;
 
-    public AdminController(AppDbContext context, IAdServiceClient adServiceClient)
+    public AdminController(AppDbContext context, IAdServiceClient adServiceClient, ILogger<AdminController> logger)
     {
         _context = context;
         _adServiceClient = adServiceClient;
+        _logger = logger;
     }
 
     [HttpGet("ideas/pending")]
@@ -28,7 +31,7 @@ public class AdminController : ControllerBase
     {
         var ideas = await GetAdminIdeaQuery(_context.Ideas
                 .AsNoTracking()
-                .Where(i => i.Status == "Registrada")
+                .Where(i => i.Status == AppConstants.Status.Registrada)
                 .OrderByDescending(i => i.CreatedAt))
             .ToListAsync(cancellationToken);
 
@@ -40,7 +43,7 @@ public class AdminController : ControllerBase
     {
         var ideas = await GetAdminIdeaQuery(_context.Ideas
                 .AsNoTracking()
-                .Where(i => i.Status != "Registrada")
+                .Where(i => i.Status != AppConstants.Status.Registrada)
                 .OrderByDescending(i => i.CreatedAt))
             .ToListAsync(cancellationToken);
 
@@ -145,72 +148,83 @@ public class AdminController : ControllerBase
             return BadRequest(new { message = "Descripción o detalle exceden el límite permitido." });
         }
 
-        await UpsertEmployeeAsync(request, cancellationToken);
-
-        var targetUserName = NormalizeUserName(request.Email);
-        if (string.IsNullOrWhiteSpace(targetUserName))
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            return BadRequest(new { message = "El correo no es válido para generar el usuario." });
-        }
+            await UpsertEmployeeAsync(request, cancellationToken);
 
-        var targetUser = await _context.AppUsers
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserName == targetUserName, cancellationToken);
-
-        if (targetUser is null)
-        {
-            targetUser = new AppUser
+            var targetUserName = NormalizeUserName(request.Email);
+            if (string.IsNullOrWhiteSpace(targetUserName))
             {
-                UserName = targetUserName,
-                Codigo_Empleado = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty,
-                NombreCompleto = TrimTo(request.NombreCompleto, 200),
-                Instancia = TrimTo(request.Instancia, 200),
-                IsActive = true,
-                LastLoginAt = null
+                return BadRequest(new { message = "El correo no es válido para generar el usuario." });
+            }
+
+            var targetUser = await _context.AppUsers
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.UserName == targetUserName, cancellationToken);
+
+            if (targetUser is null)
+            {
+                targetUser = new AppUser
+                {
+                    UserName = targetUserName,
+                    Codigo_Empleado = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty,
+                    NombreCompleto = TrimTo(request.NombreCompleto, 200),
+                    Instancia = TrimTo(request.Instancia, 200),
+                    IsActive = true,
+                    LastLoginAt = null
+                };
+                _context.AppUsers.Add(targetUser);
+                await EnsureRoleAsync(targetUser, AppConstants.Roles.Ideador, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            else if (!string.IsNullOrWhiteSpace(request.Instancia))
+            {
+                targetUser.Instancia = TrimTo(request.Instancia, 200);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            var idea = new Idea
+            {
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = targetUser.Id,
+                CodigoEmpleado = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty,
+                Descripcion = TrimTo(request.Descripcion, 500) ?? string.Empty,
+                Detalle = TrimTo(request.Detalle, 4000) ?? string.Empty,
+                Status = AppConstants.Status.Revisada,
+                Clasificacion = TrimTo(request.Clasificacion, 200) ?? "Manual Admin",
+                Via = TrimTo(request.Via, 100) ?? "Manual",
+                AdminComment = TrimTo(request.AdminComment, 1000) ?? "Carga manual"
             };
-            _context.AppUsers.Add(targetUser);
-            await EnsureRoleAsync(targetUser, "Ideador", cancellationToken);
+
+            idea.History.Add(new IdeaHistory
+            {
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = adminUser.Id,
+                ChangeType = "Registro Manual Administrativo",
+                Notes = idea.AdminComment
+            });
+
+            _context.Ideas.Add(idea);
             await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return Ok();
         }
-        else if (!string.IsNullOrWhiteSpace(request.Instancia))
+        catch (Exception ex)
         {
-            targetUser.Instancia = TrimTo(request.Instancia, 200);
-            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.RollbackAsync(cancellationToken);
+            _logger.LogError(ex, "Error registrando idea manual.");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "No fue posible registrar la idea manual." });
         }
-
-        var idea = new Idea
-        {
-            CreatedAt = DateTime.UtcNow,
-            CreatedByUserId = targetUser.Id,
-            CodigoEmpleado = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty,
-            Descripcion = TrimTo(request.Descripcion, 500) ?? string.Empty,
-            Detalle = TrimTo(request.Detalle, 4000) ?? string.Empty,
-            Status = "Revisada",
-            Clasificacion = TrimTo(request.Clasificacion, 200) ?? "Manual Admin",
-            Via = TrimTo(request.Via, 100) ?? "Manual",
-            AdminComment = TrimTo(request.AdminComment, 1000) ?? "Carga manual"
-        };
-
-        idea.History.Add(new IdeaHistory
-        {
-            ChangedAt = DateTime.UtcNow,
-            ChangedByUserId = adminUser.Id,
-            ChangeType = "Registro Manual Administrativo",
-            Notes = idea.AdminComment
-        });
-
-        _context.Ideas.Add(idea);
-        await _context.SaveChangesAsync(cancellationToken);
-        return Ok();
     }
 
     [HttpGet("dashboard")]
     public async Task<ActionResult<DashboardDto>> Dashboard(CancellationToken cancellationToken)
     {
         var total = await _context.Ideas.CountAsync(cancellationToken);
-        var pendientes = await _context.Ideas.CountAsync(i => i.Status == "Registrada", cancellationToken);
-        var revisadas = await _context.Ideas.CountAsync(i => i.Status != "Registrada", cancellationToken);
+        var pendientes = await _context.Ideas.CountAsync(i => i.Status == AppConstants.Status.Registrada, cancellationToken);
+        var revisadas = await _context.Ideas.CountAsync(i => i.Status != AppConstants.Status.Registrada, cancellationToken);
         var usuariosActivos = await _context.AppUsers.CountAsync(u => u.IsActive, cancellationToken);
 
         var porStatus = await _context.Ideas
@@ -394,7 +408,7 @@ public class AdminController : ControllerBase
             return BadRequest(new { message = "El nombre de usuario es requerido." });
         }
 
-        var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin", cancellationToken);
+        var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == AppConstants.Roles.Admin, cancellationToken);
         var user = await _context.AppUsers
             .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
@@ -453,17 +467,17 @@ public class AdminController : ControllerBase
             return NotFound();
         }
 
-        var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Admin", "Gestor" };
+        var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { AppConstants.Roles.Admin, AppConstants.Roles.Gestor };
         var requestedRoles = (request.Roles ?? Array.Empty<string>())
             .Where(r => !string.IsNullOrWhiteSpace(r) && allowedRoles.Contains(r))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        if (user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-            && !requestedRoles.Any(r => r.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
+        if (user.UserRoles.Any(ur => ur.Role.Name.Equals(AppConstants.Roles.Admin, StringComparison.OrdinalIgnoreCase))
+            && !requestedRoles.Any(r => r.Equals(AppConstants.Roles.Admin, StringComparison.OrdinalIgnoreCase)))
         {
             var remainingActiveAdmins = await _context.UserRoles
-                .Where(ur => ur.Role.Name == "Admin" && ur.UserId != user.Id)
+                .Where(ur => ur.Role.Name == AppConstants.Roles.Admin && ur.UserId != user.Id)
                 .Join(_context.AppUsers, ur => ur.UserId, u => u.Id, (_, u) => u)
                 .CountAsync(u => u.IsActive, cancellationToken);
             if (remainingActiveAdmins <= 0)
@@ -508,7 +522,7 @@ public class AdminController : ControllerBase
 
         if (!request.IsActive)
         {
-            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin", cancellationToken);
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == AppConstants.Roles.Admin, cancellationToken);
             if (adminRole is not null)
             {
                 var isAdmin = await _context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == adminRole.Id, cancellationToken);
@@ -703,7 +717,7 @@ public class AdminController : ControllerBase
 
     private async Task AssignRoleAsync(AppUser user, string roleName, CancellationToken cancellationToken)
     {
-        var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Admin", "Gestor" };
+        var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { AppConstants.Roles.Admin, AppConstants.Roles.Gestor };
         if (!allowedRoles.Contains(roleName))
         {
             return;

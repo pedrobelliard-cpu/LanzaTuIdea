@@ -78,7 +78,7 @@ public class IdeasController : ControllerBase
             }
         }
 
-        await EnsureRoleAsync(user, "Ideador", cancellationToken);
+        await EnsureRoleAsync(user, AppConstants.Roles.Ideador, cancellationToken);
         await UpsertEmployeeAsync(user.Codigo_Empleado, request, user, cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(request.Instancia))
@@ -95,7 +95,7 @@ public class IdeasController : ControllerBase
             CodigoEmpleado = TrimTo(codigoEmpleado, 20) ?? string.Empty,
             Descripcion = TrimTo(request.Descripcion, 500) ?? string.Empty,
             Detalle = TrimTo(request.Detalle, 4000) ?? string.Empty,
-            Status = "Registrada",
+            Status = AppConstants.Status.Registrada,
             Via = "Sistema"
         };
 

@@ -7,7 +7,7 @@ namespace LanzaTuIdea.Api.Data;
 
 public static class SeedData
 {
-    private static readonly string[] DefaultRoles = ["Admin", "Ideador"];
+    private static readonly string[] DefaultRoles = [AppConstants.Roles.Admin, AppConstants.Roles.Ideador];
 
     public static async Task InitializeAsync(AppDbContext context, IConfiguration configuration, IHostEnvironment environment)
     {
@@ -73,7 +73,7 @@ public static class SeedData
         var bootstrapAdmins = configuration.GetSection("BootstrapAdmins").Get<string[]>() ?? Array.Empty<string>();
         if (bootstrapAdmins.Length == 0) return;
 
-        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == AppConstants.Roles.Admin);
         if (adminRole is null) return;
 
         foreach (var userName in bootstrapAdmins)

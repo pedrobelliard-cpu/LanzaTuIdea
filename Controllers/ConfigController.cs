@@ -33,7 +33,7 @@ public class ConfigController : ControllerBase
     }
 
     [HttpPost("classifications")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppConstants.Roles.Admin)]
     public async Task<ActionResult<CatalogItemDto>> CreateClassification([FromBody] CreateCatalogItemRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
@@ -54,7 +54,7 @@ public class ConfigController : ControllerBase
     }
 
     [HttpDelete("classifications/{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppConstants.Roles.Admin)]
     public async Task<IActionResult> DeleteClassification(int id, CancellationToken cancellationToken)
     {
         var classification = await _context.Classifications.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
@@ -82,7 +82,7 @@ public class ConfigController : ControllerBase
     }
 
     [HttpPost("instances")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppConstants.Roles.Admin)]
     public async Task<ActionResult<CatalogItemDto>> CreateInstance([FromBody] CreateCatalogItemRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
@@ -103,7 +103,7 @@ public class ConfigController : ControllerBase
     }
 
     [HttpDelete("instances/{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppConstants.Roles.Admin)]
     public async Task<IActionResult> DeleteInstance(int id, CancellationToken cancellationToken)
     {
         var instance = await _context.Instances.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);

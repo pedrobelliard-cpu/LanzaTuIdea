@@ -30,6 +30,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
@@ -75,14 +76,14 @@ public class AuthController : ControllerBase
         user.NombreCompleto = TrimTo(adData.NombreCompleto, 200);
         user.LastLoginAt = DateTime.UtcNow;
 
-        await EnsureRoleAsync(user, "Ideador", cancellationToken);
+        await EnsureRoleAsync(user, AppConstants.Roles.Ideador, cancellationToken);
 
         if (_environment.IsDevelopment())
         {
             var bootstrapAdmins = _configuration.GetSection("BootstrapAdmins").Get<string[]>() ?? Array.Empty<string>();
             if (bootstrapAdmins.Any(admin => string.Equals(NormalizeUserName(admin), normalizedUserName, StringComparison.OrdinalIgnoreCase)))
             {
-                await EnsureRoleAsync(user, "Admin", cancellationToken);
+                await EnsureRoleAsync(user, AppConstants.Roles.Admin, cancellationToken);
             }
         }
 

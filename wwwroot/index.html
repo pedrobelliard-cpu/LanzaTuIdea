@@ -593,15 +593,32 @@
             initApp();
         });
 
+        function getCookie(name) {
+            return document.cookie
+                .split('; ')
+                .map(cookie => cookie.split('='))
+                .find(([key]) => key === name)?.[1] ?? null;
+        }
+
         async function apiFetch(url, options = {}) {
             const headers = options.headers || {};
+            const method = (options.method || 'GET').toUpperCase();
+            const finalHeaders = {
+                'Content-Type': 'application/json',
+                ...headers
+            };
+
+            if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+                const xsrfToken = getCookie('XSRF-TOKEN');
+                if (xsrfToken) {
+                    finalHeaders['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
+                }
+            }
+
             const finalOptions = {
                 credentials: 'include',
                 ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...headers
-                }
+                headers: finalHeaders
             };
             return fetch(url, finalOptions);
         }
@@ -683,6 +700,7 @@
         }
 
         async function initApp() {
+            await apiFetch('/api/csrf/token', { method: 'GET' });
             const response = await apiFetch('/api/auth/me', { method: 'GET' });
             if (response.ok) {
                 const user = await response.json();
