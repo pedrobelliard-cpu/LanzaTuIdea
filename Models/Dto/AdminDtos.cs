@@ -15,6 +15,7 @@ public record UserSummaryDto(
     string UserName,
     string? CodigoEmpleado,
     string? NombreCompleto,
+    string? Instancia,
     bool IsActive,
     IReadOnlyList<string> Roles
 );

@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<Idea> Ideas => Set<Idea>();
     public DbSet<IdeaHistory> IdeaHistories => Set<IdeaHistory>();
+    public DbSet<Classification> Classifications => Set<Classification>();
+    public DbSet<Instance> Instances => Set<Instance>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +37,7 @@ public class AppDbContext : DbContext
             entity.Property(u => u.UserName).HasMaxLength(100).IsRequired();
             entity.Property(u => u.Codigo_Empleado).HasMaxLength(20);
             entity.Property(u => u.NombreCompleto).HasMaxLength(200);
+            entity.Property(u => u.Instancia).HasMaxLength(200);
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -79,6 +82,18 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(h => h.ChangedByUserId)
                 .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<Classification>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Nombre).HasMaxLength(200).IsRequired();
+        });
+
+        modelBuilder.Entity<Instance>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.Nombre).HasMaxLength(200).IsRequired();
         });
     }
 }

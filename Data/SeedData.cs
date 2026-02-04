@@ -21,6 +21,7 @@ public static class SeedData
         }
 
         await SeedRolesAsync(context);
+        await SeedConfigurationAsync(context);
 
         if (environment.IsDevelopment())
         {
@@ -44,6 +45,27 @@ public static class SeedData
         }
         await context.SaveChangesAsync();
         Console.WriteLine($"--> [SeedData] Roles creados: {string.Join(", ", missing)}");
+    }
+
+    private static async Task SeedConfigurationAsync(AppDbContext context)
+    {
+        if (!await context.Classifications.AnyAsync())
+        {
+            context.Classifications.AddRange(
+                new Classification { Nombre = "Mejora de Proceso", Activo = true },
+                new Classification { Nombre = "Ahorro de Costos", Activo = true }
+            );
+        }
+
+        if (!await context.Instances.AnyAsync())
+        {
+            context.Instances.AddRange(
+                new Instance { Nombre = "Sede Central", Activo = true },
+                new Instance { Nombre = "Regional Norte", Activo = true }
+            );
+        }
+
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedBootstrapAdminsAsync(AppDbContext context, IConfiguration configuration)

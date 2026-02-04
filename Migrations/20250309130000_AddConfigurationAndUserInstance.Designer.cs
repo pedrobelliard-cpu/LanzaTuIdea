@@ -4,15 +4,17 @@ using LanzaTuIdea.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace LanzaTuIdea.Api.Migrations;
 
 [DbContext(typeof(AppDbContext))]
-public partial class AppDbContextModelSnapshot : ModelSnapshot
+[Migration("20250309130000_AddConfigurationAndUserInstance")]
+public partial class AddConfigurationAndUserInstance
 {
-    protected override void BuildModel(ModelBuilder modelBuilder)
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
         modelBuilder
             .HasAnnotation("ProductVersion", "8.0.23")

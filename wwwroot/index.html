@@ -127,6 +127,13 @@
                         <textarea id="detalleIdea" rows="5" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Explica detalladamente en qué consiste..." required></textarea>
                         <button type="button" onclick="limpiarCampo('detalleIdea')" class="text-xs text-red-400 hover:text-red-600 mt-1">Borrar campo</button>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Instancia</label>
+                        <select id="ideaInstancia" class="w-full p-3 border rounded-xl bg-white text-sm">
+                            <option value="">Seleccione una instancia</option>
+                        </select>
+                        <p class="text-xs text-slate-400 mt-1">Seleccione la instancia regional o centro al que pertenece.</p>
+                    </div>
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
@@ -188,7 +195,7 @@
                     <button onclick="navAdmin('registrar')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700">Registrar Idea (Manual)</button>
                     <button onclick="navAdmin('inbox')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">📥 Ideas Registradas</button>
                     <button onclick="navAdmin('revisadas')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">✅ Ideas Revisadas</button>
-                    <button onclick="navAdmin('usuarios')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">👥 Usuarios y Roles</button>
+                    <button onclick="navAdmin('config')" class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-50">⚙️ Configuración</button>
                 </div>
             </div>
 
@@ -307,12 +314,15 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Clasificación</label>
                         <select id="adminClasif" class="w-full p-3 border rounded-xl bg-white text-sm">
-                            <option value="Mejora de Proceso">Mejora de Proceso</option>
-                            <option value="Innovación Tecnológica">Innovación Tecnológica</option>
-                            <option value="Ahorro de Costos">Ahorro de Costos</option>
-                            <option value="Cultura Organizacional">Cultura Organizacional</option>
-                            <option value="Manual Admin">Manual Admin</option>
+                            <option value="">Seleccione una clasificación</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Instancia</label>
+                        <select id="adminInstancia" class="w-full p-3 border rounded-xl bg-white text-sm">
+                            <option value="">Seleccione una instancia</option>
+                        </select>
+                        <p class="text-xs text-slate-400 mt-1">Seleccione la instancia regional o centro al que pertenece.</p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vía de Registro</label>
@@ -328,31 +338,84 @@
             </form>
         </div>
 
-        <div id="adminUsers" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-            <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-slate-700">👥 Usuarios y Roles</h3>
-                <div class="flex items-center gap-3">
-                    <button onclick="abrirModalCrearUsuario()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">➕ Agregar usuario</button>
+        <div id="adminConfig" class="hidden space-y-6">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-slate-700">⚙️ Configuración</h3>
                     <button onclick="navAdmin('dashboard')" class="text-sm font-bold text-slate-500 hover:text-blue-600">← Volver al dashboard</button>
                 </div>
-            </div>
-            <div class="p-8">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-left text-sm">
-                        <thead>
-                            <tr class="text-slate-500">
-                                <th class="p-3">Usuario</th>
-                                <th class="p-3">Código</th>
-                                <th class="p-3">Nombre</th>
-                                <th class="p-3">Rol</th>
-                                <th class="p-3">Estado</th>
-                                <th class="p-3 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaUsuarios">
-                            <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando usuarios...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="p-8 space-y-8">
+                    <section class="space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <h4 class="text-lg font-bold text-slate-700">👥 Usuarios y Roles</h4>
+                            <button onclick="abrirModalCrearUsuario()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">➕ Agregar usuario</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-slate-500">
+                                        <th class="p-3">Usuario</th>
+                                        <th class="p-3">Código</th>
+                                        <th class="p-3">Nombre</th>
+                                        <th class="p-3">Rol</th>
+                                        <th class="p-3">Estado</th>
+                                        <th class="p-3 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaUsuarios">
+                                    <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando usuarios...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <h4 class="text-lg font-bold text-slate-700">🏷️ Clasificaciones</h4>
+                            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                                <input type="text" id="newClassificationName" class="w-full sm:w-64 p-2 border rounded-lg" placeholder="Nueva clasificación" />
+                                <button onclick="addClassification()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700">Agregar</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-slate-500">
+                                        <th class="p-3">ID</th>
+                                        <th class="p-3">Nombre</th>
+                                        <th class="p-3 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaClasificaciones">
+                                    <tr><td colspan="3" class="p-6 text-center text-slate-400">Cargando clasificaciones...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <h4 class="text-lg font-bold text-slate-700">🏢 Instancias</h4>
+                            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                                <input type="text" id="newInstanceName" class="w-full sm:w-64 p-2 border rounded-lg" placeholder="Nueva instancia" />
+                                <button onclick="addInstance()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700">Agregar</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-slate-500">
+                                        <th class="p-3">ID</th>
+                                        <th class="p-3">Nombre</th>
+                                        <th class="p-3 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaInstancias">
+                                    <tr><td colspan="3" class="p-6 text-center text-slate-400">Cargando instancias...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -413,9 +476,6 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <select id="mAdminClasif" class="p-2 border rounded bg-white text-sm">
                             <option value="">Sin clasificar</option>
-                            <option value="Mejora de Proceso">Mejora de Proceso</option>
-                            <option value="Innovación Tecnológica">Innovación Tecnológica</option>
-                            <option value="Ahorro de Costos">Ahorro de Costos</option> <option value="Cultura Organizacional">Cultura Organizacional</option> <option value="Manual Admin">Manual Admin</option>
                         </select>
                         <select id="mAdminStatus" class="p-2 border rounded bg-white text-sm">
                             <option value="Registrada">Registrada (Pendiente)</option>
@@ -462,6 +522,60 @@
                 }
             };
             return fetch(url, finalOptions);
+        }
+
+        async function loadCatalogs() {
+            const [clasifResponse, instanceResponse] = await Promise.all([
+                apiFetch('/api/config/classifications', { method: 'GET' }),
+                apiFetch('/api/config/instances', { method: 'GET' })
+            ]);
+
+            if (clasifResponse.ok) {
+                const classifications = await clasifResponse.json();
+                updateClassificationSelects(classifications);
+            }
+
+            if (instanceResponse.ok) {
+                const instances = await instanceResponse.json();
+                updateInstanceSelects(instances);
+            }
+        }
+
+        function updateClassificationSelects(items) {
+            const adminSelect = document.getElementById('adminClasif');
+            const modalSelect = document.getElementById('mAdminClasif');
+            if (adminSelect) {
+                adminSelect.innerHTML = '<option value="">Seleccione una clasificación</option>';
+                items.forEach(item => {
+                    adminSelect.innerHTML += `<option value="${item.nombre}">${item.nombre}</option>`;
+                });
+            }
+            if (modalSelect) {
+                modalSelect.innerHTML = '<option value="">Sin clasificar</option>';
+                items.forEach(item => {
+                    modalSelect.innerHTML += `<option value="${item.nombre}">${item.nombre}</option>`;
+                });
+            }
+        }
+
+        function updateInstanceSelects(items) {
+            const ideaSelect = document.getElementById('ideaInstancia');
+            const adminSelect = document.getElementById('adminInstancia');
+            if (ideaSelect) {
+                ideaSelect.innerHTML = '<option value="">Seleccione una instancia</option>';
+                items.forEach(item => {
+                    ideaSelect.innerHTML += `<option value="${item.nombre}">${item.nombre}</option>`;
+                });
+                if (currentUser?.instancia) {
+                    ideaSelect.value = currentUser.instancia;
+                }
+            }
+            if (adminSelect) {
+                adminSelect.innerHTML = '<option value="">Seleccione una instancia</option>';
+                items.forEach(item => {
+                    adminSelect.innerHTML += `<option value="${item.nombre}">${item.nombre}</option>`;
+                });
+            }
         }
 
         async function initApp() {
@@ -519,6 +633,12 @@
                 document.getElementById('viewGestor').classList.add('hidden');
                 navIdeador('home');
             }
+
+            loadCatalogs();
+            if (isAdmin) {
+                loadClassifications();
+                loadInstances();
+            }
         }
 
         async function logout() {
@@ -550,6 +670,7 @@
                 document.getElementById('ideadorForm').classList.remove('hidden');
                 limpiarFormulario();
                 cargarEmpleadoIdeador();
+                loadCatalogs();
             }
             if(view === 'lista') {
                 document.getElementById('ideadorLista').classList.remove('hidden');
@@ -558,7 +679,7 @@
         }
 
         function navAdmin(view) {
-            ['adminDashboard', 'adminInbox', 'adminRevisadas', 'adminForm', 'adminUsers'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['adminDashboard', 'adminInbox', 'adminRevisadas', 'adminForm', 'adminConfig'].forEach(id => document.getElementById(id).classList.add('hidden'));
             if(view === 'dashboard') {
                 document.getElementById('adminDashboard').classList.remove('hidden');
                 actualizarDashboard();
@@ -571,9 +692,11 @@
                 document.getElementById('adminRevisadas').classList.remove('hidden');
                 loadAdminRevisadas();
             }
-            if(view === 'usuarios') {
-                document.getElementById('adminUsers').classList.remove('hidden');
+            if(view === 'config') {
+                document.getElementById('adminConfig').classList.remove('hidden');
                 loadAdminUsers();
+                loadClassifications();
+                loadInstances();
             }
             if(view === 'registrar') document.getElementById('adminForm').classList.remove('hidden');
         }
@@ -638,6 +761,10 @@
                 email,
                 departamento
             });
+
+            if (userData.instancia) {
+                document.getElementById('ideaInstancia').value = userData.instancia;
+            }
         }
 
         function limpiarCampo(id) {
@@ -674,6 +801,7 @@
             const payload = {
                 descripcion: desc,
                 detalle,
+                instancia: document.getElementById('ideaInstancia').value,
                 nombreCompleto: document.getElementById('nombreEmpleado').value.trim(),
                 email: document.getElementById('correoEmpleado').value.trim(),
                 departamento: document.getElementById('direccionEmpleado').value.trim()
@@ -703,6 +831,7 @@
                 via: document.getElementById('adminVia').value,
                 adminComment: 'Carga manual',
                 clasificacion: document.getElementById('adminClasif').value,
+                instancia: document.getElementById('adminInstancia').value,
                 nombreCompleto: document.getElementById('adminNomEmp').value.trim(),
                 email: document.getElementById('adminMailEmp').value.trim(),
                 departamento: document.getElementById('adminDirEmp').value.trim()
@@ -846,6 +975,20 @@
             renderAdminRevisadas();
         }
 
+        async function eliminarIdea(id) {
+            if (!confirm('¿Eliminar esta idea?')) {
+                return;
+            }
+            const response = await apiFetch(`/api/admin/ideas/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                showError('Error', 'No fue posible eliminar la idea.');
+                return;
+            }
+            loadAdminInbox();
+            loadAdminRevisadas();
+            actualizarDashboard();
+        }
+
         function renderAdminInbox() {
             const tbody = document.getElementById('tablaInbox');
             tbody.innerHTML = '';
@@ -861,7 +1004,12 @@
                         <td class="p-4 text-slate-500">${fecha}</td>
                         <td class="p-4 font-bold text-slate-700">${nombre}</td>
                         <td class="p-4 text-slate-600">${idea.descripcion}</td>
-                        <td class="p-4 text-center"><button onclick="mostrarDetalle(${idea.id}, true)" class="bg-blue-600 text-white px-3 py-1 rounded shadow text-xs hover:bg-blue-700">Revisar</button></td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="mostrarDetalle(${idea.id}, true)" class="bg-blue-600 text-white px-3 py-1 rounded shadow text-xs hover:bg-blue-700">Revisar</button>
+                                <button onclick="eliminarIdea(${idea.id})" class="bg-rose-100 text-rose-700 px-3 py-1 rounded shadow text-xs hover:bg-rose-200">🗑️ Eliminar</button>
+                            </div>
+                        </td>
                     </tr>`;
             });
         }
@@ -882,7 +1030,12 @@
                         <td class="p-4 font-bold text-slate-700">${nombre}</td>
                         <td class="p-4 text-slate-600">${idea.descripcion}</td>
                         <td class="p-4 text-xs font-bold text-sky-600">${idea.clasificacion || '-'}</td>
-                        <td class="p-4 text-center"><button onclick="mostrarDetalle(${idea.id}, true)" class="text-slate-400 hover:text-blue-600">📝 Editar</button></td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="mostrarDetalle(${idea.id}, true)" class="text-slate-400 hover:text-blue-600">📝 Editar</button>
+                                <button onclick="eliminarIdea(${idea.id})" class="bg-rose-100 text-rose-700 px-3 py-1 rounded shadow text-xs hover:bg-rose-200">🗑️ Eliminar</button>
+                            </div>
+                        </td>
                     </tr>`;
             });
         }
@@ -1001,6 +1154,128 @@
                 deleteButton.addEventListener('click', () => eliminarUsuario(user.userName));
                 tbody.appendChild(row);
             });
+        }
+
+        async function loadClassifications() {
+            const response = await apiFetch('/api/config/classifications', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const items = await response.json();
+            const tbody = document.getElementById('tablaClasificaciones');
+            tbody.innerHTML = '';
+            if (!items || items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400">No hay clasificaciones registradas.</td></tr>';
+                return;
+            }
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-t border-slate-100';
+                row.innerHTML = `
+                    <td class="p-3 text-slate-500">${item.id}</td>
+                    <td class="p-3 text-slate-700">${item.nombre}</td>
+                    <td class="p-3 text-right">
+                        <button class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700">Eliminar</button>
+                    </td>
+                `;
+                const deleteButton = row.querySelector('button');
+                deleteButton.addEventListener('click', () => deleteClassification(item.id, item.nombre));
+                tbody.appendChild(row);
+            });
+        }
+
+        async function addClassification() {
+            const input = document.getElementById('newClassificationName');
+            const nombre = input.value.trim();
+            if (!nombre) {
+                showError('Error', 'El nombre de la clasificación es requerido.');
+                return;
+            }
+            const response = await apiFetch('/api/config/classifications', {
+                method: 'POST',
+                body: JSON.stringify({ nombre })
+            });
+            if (!response.ok) {
+                showError('Error', 'No fue posible crear la clasificación.');
+                return;
+            }
+            input.value = '';
+            await loadClassifications();
+            await loadCatalogs();
+        }
+
+        async function deleteClassification(id, nombre) {
+            if (!confirm(`¿Eliminar la clasificación "${nombre}"?`)) {
+                return;
+            }
+            const response = await apiFetch(`/api/config/classifications/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                showError('Error', 'No fue posible eliminar la clasificación.');
+                return;
+            }
+            await loadClassifications();
+            await loadCatalogs();
+        }
+
+        async function loadInstances() {
+            const response = await apiFetch('/api/config/instances', { method: 'GET' });
+            if (!response.ok) {
+                return;
+            }
+            const items = await response.json();
+            const tbody = document.getElementById('tablaInstancias');
+            tbody.innerHTML = '';
+            if (!items || items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400">No hay instancias registradas.</td></tr>';
+                return;
+            }
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-t border-slate-100';
+                row.innerHTML = `
+                    <td class="p-3 text-slate-500">${item.id}</td>
+                    <td class="p-3 text-slate-700">${item.nombre}</td>
+                    <td class="p-3 text-right">
+                        <button class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700">Eliminar</button>
+                    </td>
+                `;
+                const deleteButton = row.querySelector('button');
+                deleteButton.addEventListener('click', () => deleteInstance(item.id, item.nombre));
+                tbody.appendChild(row);
+            });
+        }
+
+        async function addInstance() {
+            const input = document.getElementById('newInstanceName');
+            const nombre = input.value.trim();
+            if (!nombre) {
+                showError('Error', 'El nombre de la instancia es requerido.');
+                return;
+            }
+            const response = await apiFetch('/api/config/instances', {
+                method: 'POST',
+                body: JSON.stringify({ nombre })
+            });
+            if (!response.ok) {
+                showError('Error', 'No fue posible crear la instancia.');
+                return;
+            }
+            input.value = '';
+            await loadInstances();
+            await loadCatalogs();
+        }
+
+        async function deleteInstance(id, nombre) {
+            if (!confirm(`¿Eliminar la instancia "${nombre}"?`)) {
+                return;
+            }
+            const response = await apiFetch(`/api/config/instances/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                showError('Error', 'No fue posible eliminar la instancia.');
+                return;
+            }
+            await loadInstances();
+            await loadCatalogs();
         }
 
         async function actualizarRolUsuario(userName, role) {

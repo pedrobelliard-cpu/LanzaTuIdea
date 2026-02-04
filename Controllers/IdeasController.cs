@@ -81,6 +81,12 @@ public class IdeasController : ControllerBase
         await EnsureRoleAsync(user, "Ideador", cancellationToken);
         await UpsertEmployeeAsync(user.Codigo_Empleado, request, user, cancellationToken);
 
+        if (!string.IsNullOrWhiteSpace(request.Instancia))
+        {
+            user.Instancia = request.Instancia.Trim();
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
         var codigoEmpleado = user.Codigo_Empleado ?? string.Empty;
         var idea = new Models.Idea
         {
