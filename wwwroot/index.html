@@ -228,6 +228,77 @@
                     <canvas id="chartClasificacion"></canvas>
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div class="bg-white p-6 rounded-2xl shadow">
+                    <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase">Ideas por Vía</h3>
+                    <canvas id="chartVia"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow">
+                    <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase">Ideas por Instancia</h3>
+                    <canvas id="chartInstancia"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow">
+                    <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase">Ideas por Departamento</h3>
+                    <canvas id="chartDepartamento"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow mt-8 p-6 space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-700">📈 Evolución Temporal de Ideas</h3>
+                        <p class="text-sm text-slate-500">Analiza el volumen de ideas por periodo y filtros.</p>
+                    </div>
+                    <div class="text-2xl font-black text-slate-800">
+                        Total en periodo: <span id="totalTimeline">0</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Periodo</label>
+                        <select id="timelinePeriodo" class="w-full p-2 border rounded-lg text-sm">
+                            <option value="1M">1 Mes</option>
+                            <option value="3M">3 Meses</option>
+                            <option value="6M">6 Meses</option>
+                            <option value="1Y">1 Año</option>
+                            <option value="5Y">5 Años</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Status</label>
+                        <select id="timelineStatus" class="w-full p-2 border rounded-lg text-sm">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Vía</label>
+                        <select id="timelineVia" class="w-full p-2 border rounded-lg text-sm">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Instancia</label>
+                        <select id="timelineInstancia" class="w-full p-2 border rounded-lg text-sm">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Departamento</label>
+                        <select id="timelineDepartamento" class="w-full p-2 border rounded-lg text-sm">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button id="timelineFilterButton" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700">
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <canvas id="chartTimeline"></canvas>
+                </div>
+            </div>
         </div>
 
         <div id="adminInbox" class="hidden space-y-4">
@@ -515,6 +586,10 @@
             document.getElementById('formIdea').addEventListener('submit', handleIdeaSubmit);
             document.getElementById('formAdminManual').addEventListener('submit', handleManualSubmit);
             document.getElementById('adminIdEmp').addEventListener('input', (e) => buscarEmpleadoAdmin(e.target.value));
+            const timelineButton = document.getElementById('timelineFilterButton');
+            if (timelineButton) {
+                timelineButton.addEventListener('click', () => cargarTimeline());
+            }
             initApp();
         });
 
@@ -712,6 +787,7 @@
             if(view === 'dashboard') {
                 document.getElementById('adminDashboard').classList.remove('hidden');
                 actualizarDashboard();
+                cargarTimeline();
             }
             if(view === 'inbox') {
                 document.getElementById('adminInbox').classList.remove('hidden');
@@ -1090,12 +1166,16 @@
             document.getElementById('kpiAprobadas').innerText = data.revisadas;
             document.getElementById('kpiUsuarios').innerText = data.usuariosActivos;
             actualizarGraficos(data);
+            actualizarFiltrosTimeline(data);
         }
 
         function actualizarGraficos(data) {
             const ctxStatus = document.getElementById('chartStatus');
             const ctxClasif = document.getElementById('chartClasificacion');
-            if(!ctxStatus || !ctxClasif) return;
+            const ctxVia = document.getElementById('chartVia');
+            const ctxInstancia = document.getElementById('chartInstancia');
+            const ctxDepartamento = document.getElementById('chartDepartamento');
+            if(!ctxStatus || !ctxClasif || !ctxVia || !ctxInstancia || !ctxDepartamento) return;
 
             const statusLookup = {};
             (data.porStatus || []).forEach(item => statusLookup[item.label] = item.count);
@@ -1106,8 +1186,20 @@
             const clasifLabels = (data.porClasificacion || []).map(item => item.label);
             const clasifValues = (data.porClasificacion || []).map(item => item.count);
 
+            const viaLabels = (data.porVia || []).map(item => item.label);
+            const viaValues = (data.porVia || []).map(item => item.count);
+
+            const instanciaLabels = (data.porInstancia || []).map(item => item.label);
+            const instanciaValues = (data.porInstancia || []).map(item => item.count);
+
+            const departamentoLabels = (data.porDepartamento || []).map(item => item.label);
+            const departamentoValues = (data.porDepartamento || []).map(item => item.count);
+
             if(charts.status) charts.status.destroy();
             if(charts.clasif) charts.clasif.destroy();
+            if(charts.via) charts.via.destroy();
+            if(charts.instancia) charts.instancia.destroy();
+            if(charts.departamento) charts.departamento.destroy();
 
             charts.status = new Chart(ctxStatus, {
                 type: 'doughnut',
@@ -1129,6 +1221,138 @@
                         data: clasifValues,
                         backgroundColor: '#0ea5e9'
                     }]
+                }
+            });
+
+            charts.via = new Chart(ctxVia, {
+                type: 'doughnut',
+                data: {
+                    labels: viaLabels,
+                    datasets: [{
+                        data: viaValues,
+                        backgroundColor: ['#6366f1', '#38bdf8', '#f97316', '#14b8a6', '#a855f7']
+                    }]
+                }
+            });
+
+            charts.instancia = new Chart(ctxInstancia, {
+                type: 'bar',
+                data: {
+                    labels: instanciaLabels,
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: instanciaValues,
+                        backgroundColor: '#22c55e'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            charts.departamento = new Chart(ctxDepartamento, {
+                type: 'bar',
+                data: {
+                    labels: departamentoLabels,
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: departamentoValues,
+                        backgroundColor: '#f97316'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function actualizarFiltrosTimeline(data) {
+            const statusLabels = (data.porStatus || []).map(item => item.label);
+            const viaLabels = (data.porVia || []).map(item => item.label);
+            const instanciaLabels = (data.porInstancia || []).map(item => item.label);
+            const departamentoLabels = (data.porDepartamento || []).map(item => item.label);
+
+            actualizarSelectTimeline('timelineStatus', statusLabels, 'Todos');
+            actualizarSelectTimeline('timelineVia', viaLabels, 'Todas');
+            actualizarSelectTimeline('timelineInstancia', instanciaLabels, 'Todas');
+            actualizarSelectTimeline('timelineDepartamento', departamentoLabels, 'Todos');
+        }
+
+        function actualizarSelectTimeline(selectId, labels, placeholder) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const currentValue = select.value;
+            const uniqueLabels = Array.from(new Set(labels.filter(label => label && label.trim())))
+                .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            uniqueLabels.forEach(label => {
+                const option = document.createElement('option');
+                option.value = label;
+                option.textContent = label;
+                select.appendChild(option);
+            });
+            if (currentValue && uniqueLabels.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        async function cargarTimeline() {
+            const periodoSelect = document.getElementById('timelinePeriodo');
+            const statusSelect = document.getElementById('timelineStatus');
+            const viaSelect = document.getElementById('timelineVia');
+            const instanciaSelect = document.getElementById('timelineInstancia');
+            const departamentoSelect = document.getElementById('timelineDepartamento');
+            if (!periodoSelect || !statusSelect || !viaSelect || !instanciaSelect || !departamentoSelect) {
+                return;
+            }
+
+            const payload = {
+                periodo: periodoSelect.value || '1M',
+                status: statusSelect.value ? [statusSelect.value] : null,
+                vias: viaSelect.value ? [viaSelect.value] : null,
+                instancias: instanciaSelect.value ? [instanciaSelect.value] : null,
+                departamentos: departamentoSelect.value ? [departamentoSelect.value] : null
+            };
+
+            const response = await apiFetch('/api/admin/dashboard/timeline', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const puntos = data.puntos || [];
+            const labels = puntos.map(p => p.fecha.split('T')[0]);
+            const values = puntos.map(p => p.cantidad);
+
+            const totalElement = document.getElementById('totalTimeline');
+            if (totalElement) {
+                totalElement.innerText = data.totalFiltrado ?? 0;
+            }
+
+            const ctxTimeline = document.getElementById('chartTimeline');
+            if (!ctxTimeline) return;
+            if (charts.timeline) charts.timeline.destroy();
+            charts.timeline = new Chart(ctxTimeline, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Ideas',
+                        data: values,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
                 }
             });
         }
