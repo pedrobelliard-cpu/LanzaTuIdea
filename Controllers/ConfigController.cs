@@ -41,7 +41,13 @@ public class ConfigController : ControllerBase
             return BadRequest(new { message = "El nombre es requerido." });
         }
 
-        var classification = new Classification { Nombre = request.Nombre.Trim(), Activo = true };
+        var nombre = TrimTo(request.Nombre, 200);
+        if (nombre is null)
+        {
+            return BadRequest(new { message = "El nombre es requerido." });
+        }
+
+        var classification = new Classification { Nombre = nombre, Activo = true };
         _context.Classifications.Add(classification);
         await _context.SaveChangesAsync(cancellationToken);
         return new CatalogItemDto(classification.Id, classification.Nombre);
@@ -84,7 +90,13 @@ public class ConfigController : ControllerBase
             return BadRequest(new { message = "El nombre es requerido." });
         }
 
-        var instance = new Instance { Nombre = request.Nombre.Trim(), Activo = true };
+        var nombre = TrimTo(request.Nombre, 200);
+        if (nombre is null)
+        {
+            return BadRequest(new { message = "El nombre es requerido." });
+        }
+
+        var instance = new Instance { Nombre = nombre, Activo = true };
         _context.Instances.Add(instance);
         await _context.SaveChangesAsync(cancellationToken);
         return new CatalogItemDto(instance.Id, instance.Nombre);
@@ -103,5 +115,16 @@ public class ConfigController : ControllerBase
         instance.Activo = false;
         await _context.SaveChangesAsync(cancellationToken);
         return Ok();
+    }
+
+    private static string? TrimTo(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed.Substring(0, maxLength);
     }
 }

@@ -100,7 +100,13 @@ public static class SeedData
 
     private static async Task ImportEmployeesIfEmptyAsync(AppDbContext context, IConfiguration configuration)
     {
-        await context.Database.ExecuteSqlRawAsync("DELETE FROM Employees");
+        var forceReload = configuration.GetValue<bool>("Seed:Employees:ForceReload");
+        var hasEmployees = await context.Employees.AnyAsync();
+        if (hasEmployees && !forceReload)
+        {
+            Console.WriteLine("--> [SeedData] Ya existen empleados, se omite la importación.");
+            return;
+        }
 
         var root = configuration["Seed:EmployeesPath"] ?? Path.Combine(AppContext.BaseDirectory, "seed", "empleados.csv");
         var path = File.Exists(root) ? root : Path.Combine(Directory.GetCurrentDirectory(), "seed", "empleados.csv");
@@ -112,6 +118,21 @@ public static class SeedData
             Console.WriteLine("--> [SeedData] ADVERTENCIA: No se encontró el archivo CSV.");
             return;
         }
+
+        if (forceReload)
+        {
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            await context.Database.ExecuteSqlRawAsync("DELETE FROM Employees");
+            await ImportEmployeesAsync(context, path);
+            await transaction.CommitAsync();
+            return;
+        }
+
+        await ImportEmployeesAsync(context, path);
+    }
+
+    private static async Task ImportEmployeesAsync(AppDbContext context, string path)
+    {
 
         // CORRECCIÓN DE ENCODING: Usamos Latin1 para soportar archivos de Excel/Windows en español
         var lines = await File.ReadAllLinesAsync(path, Encoding.Latin1);

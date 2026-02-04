@@ -140,6 +140,11 @@ public class AdminController : ControllerBase
             return Unauthorized();
         }
 
+        if (request.Descripcion.Length > 500 || request.Detalle.Length > 4000)
+        {
+            return BadRequest(new { message = "Descripción o detalle exceden el límite permitido." });
+        }
+
         await UpsertEmployeeAsync(request, cancellationToken);
 
         var targetUserName = NormalizeUserName(request.Email);
@@ -158,9 +163,9 @@ public class AdminController : ControllerBase
             targetUser = new AppUser
             {
                 UserName = targetUserName,
-                Codigo_Empleado = request.CodigoEmpleado.Trim(),
-                NombreCompleto = request.NombreCompleto?.Trim(),
-                Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim(),
+                Codigo_Empleado = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty,
+                NombreCompleto = TrimTo(request.NombreCompleto, 200),
+                Instancia = TrimTo(request.Instancia, 200),
                 IsActive = true,
                 LastLoginAt = null
             };
@@ -170,7 +175,7 @@ public class AdminController : ControllerBase
         }
         else if (!string.IsNullOrWhiteSpace(request.Instancia))
         {
-            targetUser.Instancia = request.Instancia.Trim();
+            targetUser.Instancia = TrimTo(request.Instancia, 200);
             await _context.SaveChangesAsync(cancellationToken);
         }
 
@@ -178,13 +183,13 @@ public class AdminController : ControllerBase
         {
             CreatedAt = DateTime.UtcNow,
             CreatedByUserId = targetUser.Id,
-            CodigoEmpleado = request.CodigoEmpleado.Trim(),
-            Descripcion = request.Descripcion.Trim(),
-            Detalle = request.Detalle.Trim(),
+            CodigoEmpleado = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty,
+            Descripcion = TrimTo(request.Descripcion, 500) ?? string.Empty,
+            Detalle = TrimTo(request.Detalle, 4000) ?? string.Empty,
             Status = "Revisada",
-            Clasificacion = request.Clasificacion?.Trim() ?? "Manual Admin",
-            Via = request.Via?.Trim() ?? "Manual",
-            AdminComment = request.AdminComment?.Trim() ?? "Carga manual"
+            Clasificacion = TrimTo(request.Clasificacion, 200) ?? "Manual Admin",
+            Via = TrimTo(request.Via, 100) ?? "Manual",
+            AdminComment = TrimTo(request.AdminComment, 1000) ?? "Carga manual"
         };
 
         idea.History.Add(new IdeaHistory
@@ -344,7 +349,7 @@ public class AdminController : ControllerBase
             return BadRequest(new { message = "El nombre de usuario es requerido." });
         }
 
-        var normalized = request.UserName.Trim();
+        var normalized = NormalizeUserName(request.UserName);
         var existing = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == normalized, cancellationToken);
         if (existing is not null)
         {
@@ -361,9 +366,9 @@ public class AdminController : ControllerBase
         {
             UserName = normalized,
             IsActive = true,
-            Codigo_Empleado = adData.CodigoEmpleado,
-            NombreCompleto = adData.NombreCompleto,
-            Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim(),
+            Codigo_Empleado = TrimTo(adData.CodigoEmpleado, 20),
+            NombreCompleto = TrimTo(adData.NombreCompleto, 200),
+            Instancia = TrimTo(request.Instancia, 200),
             LastLoginAt = null
         };
 
@@ -449,7 +454,20 @@ public class AdminController : ControllerBase
         }
 
         var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Admin", "Gestor" };
-        var requestedRoles = request.Roles.Where(r => allowedRoles.Contains(r)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var requestedRoles = (request.Roles ?? Array.Empty<string>())
+            .Where(r => !string.IsNullOrWhiteSpace(r) && allowedRoles.Contains(r))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            && !requestedRoles.Any(r => r.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
+        {
+            var adminCount = await _context.UserRoles.CountAsync(ur => ur.Role.Name == "Admin", cancellationToken);
+            if (adminCount <= 1)
+            {
+                return BadRequest(new { message = "No se puede remover el último administrador." });
+            }
+        }
 
         var roles = await _context.Roles.Where(r => allowedRoles.Contains(r.Name)).ToListAsync(cancellationToken);
 
@@ -485,6 +503,26 @@ public class AdminController : ControllerBase
             return NotFound();
         }
 
+        if (!request.IsActive)
+        {
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin", cancellationToken);
+            if (adminRole is not null)
+            {
+                var isAdmin = await _context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == adminRole.Id, cancellationToken);
+                if (isAdmin)
+                {
+                    var activeAdmins = await _context.UserRoles
+                        .Where(ur => ur.RoleId == adminRole.Id)
+                        .Join(_context.AppUsers, ur => ur.UserId, u => u.Id, (_, u) => u)
+                        .CountAsync(u => u.IsActive, cancellationToken);
+                    if (activeAdmins <= 1)
+                    {
+                        return BadRequest(new { message = "No se puede desactivar el último administrador." });
+                    }
+                }
+            }
+        }
+
         user.IsActive = request.IsActive;
         await _context.SaveChangesAsync(cancellationToken);
         return Ok();
@@ -499,7 +537,7 @@ public class AdminController : ControllerBase
             return NotFound();
         }
 
-        user.Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim();
+        user.Instancia = TrimTo(request.Instancia, 200);
         await _context.SaveChangesAsync(cancellationToken);
         return Ok();
     }
@@ -562,7 +600,7 @@ public class AdminController : ControllerBase
 
     private async Task UpsertEmployeeAsync(IdeaManualRequest request, CancellationToken cancellationToken)
     {
-        var codigo = request.CodigoEmpleado.Trim();
+        var codigo = TrimTo(request.CodigoEmpleado, 20) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(codigo))
         {
             return;
@@ -571,17 +609,17 @@ public class AdminController : ControllerBase
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Codigo_Empleado == codigo, cancellationToken);
         var nombreCompleto = request.NombreCompleto ?? string.Empty;
         var parsed = ParseNombreCompleto(nombreCompleto);
-        var email = request.Email ?? string.Empty;
-        var departamento = request.Departamento ?? string.Empty;
+        var email = TrimTo(request.Email, 200) ?? string.Empty;
+        var departamento = TrimTo(request.Departamento, 200) ?? string.Empty;
 
         if (employee is null)
         {
             employee = new Employee
             {
                 Codigo_Empleado = codigo,
-                Nombre = parsed.Nombre,
-                Apellido1 = parsed.Apellido1,
-                Apellido2 = parsed.Apellido2,
+                Nombre = TrimTo(parsed.Nombre, 100) ?? string.Empty,
+                Apellido1 = TrimTo(parsed.Apellido1, 100) ?? string.Empty,
+                Apellido2 = TrimTo(parsed.Apellido2, 100) ?? string.Empty,
                 E_Mail = email,
                 Departamento = departamento,
                 Estatus = "A"
@@ -647,6 +685,17 @@ public class AdminController : ControllerBase
         }
 
         return (parts[0], parts[1], string.Join(" ", parts.Skip(2)));
+    }
+
+    private static string? TrimTo(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed.Substring(0, maxLength);
     }
 
     private async Task AssignRoleAsync(AppUser user, string roleName, CancellationToken cancellationToken)

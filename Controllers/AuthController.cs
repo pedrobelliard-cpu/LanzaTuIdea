@@ -71,8 +71,8 @@ public class AuthController : ControllerBase
             _context.AppUsers.Add(user);
         }
 
-        user.Codigo_Empleado = adData.CodigoEmpleado;
-        user.NombreCompleto = adData.NombreCompleto;
+        user.Codigo_Empleado = TrimTo(adData.CodigoEmpleado, 20);
+        user.NombreCompleto = TrimTo(adData.NombreCompleto, 200);
         user.LastLoginAt = DateTime.UtcNow;
 
         await EnsureRoleAsync(user, "Ideador", cancellationToken);
@@ -190,5 +190,16 @@ public class AuthController : ControllerBase
         var trimmed = userName.Trim();
         var atIndex = trimmed.IndexOf('@');
         return atIndex > 0 ? trimmed[..atIndex] : trimmed;
+    }
+
+    private static string? TrimTo(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed.Substring(0, maxLength);
     }
 }

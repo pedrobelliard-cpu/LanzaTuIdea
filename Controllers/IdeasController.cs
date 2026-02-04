@@ -83,7 +83,7 @@ public class IdeasController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(request.Instancia))
         {
-            user.Instancia = request.Instancia.Trim();
+            user.Instancia = TrimTo(request.Instancia, 200);
             await _context.SaveChangesAsync(cancellationToken);
         }
 
@@ -92,9 +92,9 @@ public class IdeasController : ControllerBase
         {
             CreatedAt = DateTime.UtcNow,
             CreatedByUserId = user.Id,
-            CodigoEmpleado = codigoEmpleado,
-            Descripcion = request.Descripcion.Trim(),
-            Detalle = request.Detalle.Trim(),
+            CodigoEmpleado = TrimTo(codigoEmpleado, 20) ?? string.Empty,
+            Descripcion = TrimTo(request.Descripcion, 500) ?? string.Empty,
+            Detalle = TrimTo(request.Detalle, 4000) ?? string.Empty,
             Status = "Registrada",
             Via = "Sistema"
         };
@@ -181,8 +181,8 @@ public class IdeasController : ControllerBase
         var user = new AppUser
         {
             UserName = userName,
-            Codigo_Empleado = codigoEmpleado,
-            NombreCompleto = nombreCompleto,
+            Codigo_Empleado = TrimTo(codigoEmpleado, 20),
+            NombreCompleto = TrimTo(nombreCompleto, 200),
             IsActive = true,
             LastLoginAt = DateTime.UtcNow
         };
@@ -220,17 +220,17 @@ public class IdeasController : ControllerBase
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Codigo_Empleado == codigoEmpleado, cancellationToken);
         var nombreCompleto = request.NombreCompleto ?? user.NombreCompleto ?? string.Empty;
         var parsed = ParseNombreCompleto(nombreCompleto);
-        var email = request.Email ?? string.Empty;
-        var departamento = request.Departamento ?? string.Empty;
+        var email = TrimTo(request.Email, 200) ?? string.Empty;
+        var departamento = TrimTo(request.Departamento, 200) ?? string.Empty;
 
         if (employee is null)
         {
             employee = new Employee
             {
                 Codigo_Empleado = codigoEmpleado,
-                Nombre = parsed.Nombre,
-                Apellido1 = parsed.Apellido1,
-                Apellido2 = parsed.Apellido2,
+                Nombre = TrimTo(parsed.Nombre, 100) ?? string.Empty,
+                Apellido1 = TrimTo(parsed.Apellido1, 100) ?? string.Empty,
+                Apellido2 = TrimTo(parsed.Apellido2, 100) ?? string.Empty,
                 E_Mail = email,
                 Departamento = departamento,
                 Estatus = "A"
@@ -296,5 +296,16 @@ public class IdeasController : ControllerBase
         }
 
         return (parts[0], parts[1], string.Join(" ", parts.Skip(2)));
+    }
+
+    private static string? TrimTo(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed.Substring(0, maxLength);
     }
 }
