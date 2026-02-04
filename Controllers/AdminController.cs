@@ -218,7 +218,101 @@ public class AdminController : ControllerBase
             .Select(g => new CountByLabelDto(g.Key, g.Count()))
             .ToListAsync(cancellationToken);
 
-        return new DashboardDto(total, pendientes, revisadas, usuariosActivos, porStatus, porClasificacion);
+        var porVia = await _context.Ideas
+            .GroupBy(i => i.Via ?? "Sin Vía")
+            .Select(g => new CountByLabelDto(g.Key, g.Count()))
+            .ToListAsync(cancellationToken);
+
+        var porInstancia = await (from idea in _context.Ideas
+                                  join user in _context.AppUsers on idea.CreatedByUserId equals user.Id into userGroup
+                                  from user in userGroup.DefaultIfEmpty()
+                                  group user by (user != null && !string.IsNullOrWhiteSpace(user.Instancia) ? user.Instancia : "Sin Instancia")
+            into g
+                                  select new CountByLabelDto(g.Key!, g.Count()))
+            .ToListAsync(cancellationToken);
+
+        var porDepartamento = await (from idea in _context.Ideas
+                                     join employee in _context.Employees on idea.CodigoEmpleado equals employee.Codigo_Empleado into empGroup
+                                     from employee in empGroup.DefaultIfEmpty()
+                                     group employee by (employee != null && !string.IsNullOrWhiteSpace(employee.Departamento) ? employee.Departamento : "Sin Departamento")
+            into g
+                                     select new CountByLabelDto(g.Key!, g.Count()))
+            .ToListAsync(cancellationToken);
+
+        return new DashboardDto(total, pendientes, revisadas, usuariosActivos, porStatus, porClasificacion, porVia, porInstancia, porDepartamento);
+    }
+
+    [HttpPost("dashboard/timeline")]
+    public async Task<ActionResult<TimelineResponse>> Timeline([FromBody] TimelineFilterRequest? request, CancellationToken cancellationToken)
+    {
+        request ??= new TimelineFilterRequest("1M", null, null, null, null);
+        var ideasQuery = _context.Ideas.AsNoTracking().AsQueryable();
+        var now = DateTime.UtcNow;
+        var periodo = string.IsNullOrWhiteSpace(request.Periodo) ? "1M" : request.Periodo;
+        var startDate = periodo switch
+        {
+            "1M" => now.AddMonths(-1),
+            "3M" => now.AddMonths(-3),
+            "6M" => now.AddMonths(-6),
+            "1Y" => now.AddYears(-1),
+            "5Y" => now.AddYears(-5),
+            _ => now.AddMonths(-1)
+        };
+
+        ideasQuery = ideasQuery.Where(i => i.CreatedAt >= startDate);
+
+        var statusFilters = request.Status?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToList();
+        if (statusFilters is { Count: > 0 })
+        {
+            ideasQuery = ideasQuery.Where(i => statusFilters.Contains(i.Status));
+        }
+
+        var viaFilters = request.Vias?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).ToList() ?? new List<string>();
+        var includeSinVia = viaFilters.RemoveAll(v => v.Equals("Sin Vía", StringComparison.OrdinalIgnoreCase)) > 0;
+        if (includeSinVia || viaFilters.Count > 0)
+        {
+            ideasQuery = ideasQuery.Where(i =>
+                (includeSinVia && string.IsNullOrWhiteSpace(i.Via))
+                || (i.Via != null && viaFilters.Contains(i.Via)));
+        }
+
+        var instanciaFilters = request.Instancias?.Where(i => !string.IsNullOrWhiteSpace(i)).Select(i => i.Trim()).ToList() ?? new List<string>();
+        var includeSinInstancia = instanciaFilters.RemoveAll(i => i.Equals("Sin Instancia", StringComparison.OrdinalIgnoreCase)) > 0;
+        if (includeSinInstancia || instanciaFilters.Count > 0)
+        {
+            ideasQuery = from idea in ideasQuery
+                         join user in _context.AppUsers.AsNoTracking() on idea.CreatedByUserId equals user.Id into userGroup
+                         from user in userGroup.DefaultIfEmpty()
+                         where (includeSinInstancia && (user == null || string.IsNullOrWhiteSpace(user.Instancia)))
+                               || (user != null && user.Instancia != null && instanciaFilters.Contains(user.Instancia))
+                         select idea;
+        }
+
+        var departamentoFilters = request.Departamentos?.Where(d => !string.IsNullOrWhiteSpace(d)).Select(d => d.Trim()).ToList() ?? new List<string>();
+        var includeSinDepartamento = departamentoFilters.RemoveAll(d => d.Equals("Sin Departamento", StringComparison.OrdinalIgnoreCase)) > 0;
+        if (includeSinDepartamento || departamentoFilters.Count > 0)
+        {
+            ideasQuery = from idea in ideasQuery
+                         join employee in _context.Employees.AsNoTracking() on idea.CodigoEmpleado equals employee.Codigo_Empleado into empGroup
+                         from employee in empGroup.DefaultIfEmpty()
+                         where (includeSinDepartamento && (employee == null || string.IsNullOrWhiteSpace(employee.Departamento)))
+                               || (employee != null && employee.Departamento != null && departamentoFilters.Contains(employee.Departamento))
+                         select idea;
+        }
+
+        var totalFiltrado = await ideasQuery.CountAsync(cancellationToken);
+
+        var fechas = await ideasQuery
+            .Select(i => i.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var puntos = fechas
+            .GroupBy(fecha => fecha.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new TimePointDto(g.Key, g.Count()))
+            .ToList();
+
+        return new TimelineResponse(puntos, totalFiltrado);
     }
 
     [HttpGet("users")]

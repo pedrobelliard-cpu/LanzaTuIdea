@@ -6,7 +6,10 @@ public record DashboardDto(
     int Revisadas,
     int UsuariosActivos,
     IReadOnlyList<CountByLabelDto> PorStatus,
-    IReadOnlyList<CountByLabelDto> PorClasificacion
+    IReadOnlyList<CountByLabelDto> PorClasificacion,
+    IReadOnlyList<CountByLabelDto> PorVia,
+    IReadOnlyList<CountByLabelDto> PorInstancia,
+    IReadOnlyList<CountByLabelDto> PorDepartamento
 );
 
 public record CountByLabelDto(string Label, int Count);
@@ -34,3 +37,18 @@ public record EmployeeLookupDto(
     string? Email,
     string? Departamento
 );
+
+public record TimelineFilterRequest(
+    string Periodo,
+    IReadOnlyList<string>? Status,
+    IReadOnlyList<string>? Vias,
+    IReadOnlyList<string>? Instancias,
+    IReadOnlyList<string>? Departamentos
+);
+
+public record TimelineResponse(
+    IReadOnlyList<TimePointDto> Puntos,
+    int TotalFiltrado
+);
+
+public record TimePointDto(DateTime Fecha, int Cantidad);
