@@ -596,21 +596,38 @@
         }
 
         async function cargarEmpleadoIdeador() {
-            let data = currentUser;
-            if (!data) {
+            let userData = currentUser;
+            if (!userData) {
                 const response = await apiFetch('/api/auth/me', { method: 'GET' });
                 if (!response.ok) {
                     return;
                 }
-                data = await response.json();
-                currentUser = data;
+                userData = await response.json();
+                currentUser = userData;
             }
 
-            document.getElementById('idEmpleado').value = data.codigoEmpleado || '';
-            document.getElementById('nombreEmpleado').value = data.nombreCompleto || '';
-            document.getElementById('correoEmpleado').value = data.email || '';
-            document.getElementById('direccionEmpleado').value = data.departamento || '';
-            ajustarCamposIdeador(data);
+            let employeeData = null;
+            const employeeResponse = await apiFetch('/api/employees/me', { method: 'GET' });
+            if (employeeResponse.ok) {
+                employeeData = await employeeResponse.json();
+            }
+
+            const codigoEmpleado = userData.codigoEmpleado || employeeData?.codigoEmpleado || '';
+            const nombreCompleto = employeeData?.nombreCompleto || userData.nombreCompleto || '';
+            const email = employeeData?.email || userData.email || '';
+            const departamento = employeeData?.departamento || userData.departamento || '';
+
+            document.getElementById('idEmpleado').value = codigoEmpleado;
+            document.getElementById('nombreEmpleado').value = nombreCompleto;
+            document.getElementById('correoEmpleado').value = email;
+            document.getElementById('direccionEmpleado').value = departamento;
+
+            ajustarCamposIdeador({
+                employeeExists: userData.employeeExists,
+                nombreCompleto,
+                email,
+                departamento
+            });
         }
 
         function limpiarCampo(id) {
