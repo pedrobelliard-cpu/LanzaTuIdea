@@ -3,6 +3,7 @@ namespace LanzaTuIdea.Api.Models.Dto;
 public record IdeaCreateRequest(
     string Descripcion,
     string Detalle,
+    string? Instancia,
     string? NombreCompleto,
     string? Email,
     string? Departamento
@@ -61,6 +62,7 @@ public record IdeaManualRequest(
     string? Via,
     string? AdminComment,
     string? Clasificacion,
+    string? Instancia,
     string? NombreCompleto,
     string? Email,
     string? Departamento

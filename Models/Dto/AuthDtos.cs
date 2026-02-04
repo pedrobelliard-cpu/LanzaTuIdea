@@ -6,6 +6,7 @@ public record UserInfoDto(
     string UserName,
     string? CodigoEmpleado,
     string? NombreCompleto,
+    string? Instancia,
     IReadOnlyList<string> Roles,
     string? Email,
     string? Departamento,

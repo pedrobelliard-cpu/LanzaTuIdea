@@ -6,6 +6,7 @@ public class AppUser
     public string UserName { get; set; } = "";
     public string? Codigo_Empleado { get; set; }
     public string? NombreCompleto { get; set; }
+    public string? Instancia { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? LastLoginAt { get; set; }
 

@@ -160,11 +160,17 @@ public class AdminController : ControllerBase
                 UserName = targetUserName,
                 Codigo_Empleado = request.CodigoEmpleado.Trim(),
                 NombreCompleto = request.NombreCompleto?.Trim(),
+                Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim(),
                 IsActive = true,
                 LastLoginAt = null
             };
             _context.AppUsers.Add(targetUser);
             await EnsureRoleAsync(targetUser, "Ideador", cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.Instancia))
+        {
+            targetUser.Instancia = request.Instancia.Trim();
             await _context.SaveChangesAsync(cancellationToken);
         }
 
@@ -228,6 +234,7 @@ public class AdminController : ControllerBase
             u.UserName,
             u.Codigo_Empleado,
             u.NombreCompleto,
+            u.Instancia,
             u.IsActive,
             u.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
         )).ToList();
@@ -262,6 +269,7 @@ public class AdminController : ControllerBase
             IsActive = true,
             Codigo_Empleado = adData.CodigoEmpleado,
             NombreCompleto = adData.NombreCompleto,
+            Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim(),
             LastLoginAt = null
         };
 
@@ -276,7 +284,7 @@ public class AdminController : ControllerBase
         await _context.SaveChangesAsync(cancellationToken);
 
         var roles = user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList();
-        return new UserSummaryDto(user.UserName, user.Codigo_Empleado, user.NombreCompleto, user.IsActive, roles);
+        return new UserSummaryDto(user.UserName, user.Codigo_Empleado, user.NombreCompleto, user.Instancia, user.IsActive, roles);
     }
 
     [HttpDelete("users/{userName}")]
@@ -287,6 +295,7 @@ public class AdminController : ControllerBase
             return BadRequest(new { message = "El nombre de usuario es requerido." });
         }
 
+        var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin", cancellationToken);
         var user = await _context.AppUsers
             .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
@@ -296,9 +305,39 @@ public class AdminController : ControllerBase
             return NotFound();
         }
 
+        if (adminRole is not null && user.UserRoles.Any(ur => ur.RoleId == adminRole.Id))
+        {
+            var adminCount = await _context.UserRoles.CountAsync(ur => ur.RoleId == adminRole.Id, cancellationToken);
+            if (adminCount <= 1)
+            {
+                return BadRequest(new { message = "No se puede eliminar el último administrador." });
+            }
+        }
+
         user.IsActive = false;
         user.UserRoles.Clear();
         await _context.SaveChangesAsync(cancellationToken);
+        return Ok();
+    }
+
+    [HttpDelete("ideas/{id:int}")]
+    public async Task<IActionResult> DeleteIdea(int id, CancellationToken cancellationToken)
+    {
+        var idea = await _context.Ideas.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        if (idea is null)
+        {
+            return NotFound();
+        }
+
+        _context.Ideas.Remove(idea);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "No fue posible eliminar la idea." });
+        }
         return Ok();
     }
 
@@ -353,6 +392,20 @@ public class AdminController : ControllerBase
         }
 
         user.IsActive = request.IsActive;
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok();
+    }
+
+    [HttpPut("users/{userName}/instance")]
+    public async Task<IActionResult> UpdateInstance(string userName, [FromBody] UpdateUserInstanceRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        user.Instancia = string.IsNullOrWhiteSpace(request.Instancia) ? null : request.Instancia.Trim();
         await _context.SaveChangesAsync(cancellationToken);
         return Ok();
     }
