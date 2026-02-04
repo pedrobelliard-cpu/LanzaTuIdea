@@ -462,8 +462,11 @@ public class AdminController : ControllerBase
         if (user.UserRoles.Any(ur => ur.Role.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
             && !requestedRoles.Any(r => r.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
         {
-            var adminCount = await _context.UserRoles.CountAsync(ur => ur.Role.Name == "Admin", cancellationToken);
-            if (adminCount <= 1)
+            var remainingActiveAdmins = await _context.UserRoles
+                .Where(ur => ur.Role.Name == "Admin" && ur.UserId != user.Id)
+                .Join(_context.AppUsers, ur => ur.UserId, u => u.Id, (_, u) => u)
+                .CountAsync(u => u.IsActive, cancellationToken);
+            if (remainingActiveAdmins <= 0)
             {
                 return BadRequest(new { message = "No se puede remover el último administrador." });
             }
