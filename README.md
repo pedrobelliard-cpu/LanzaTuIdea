@@ -49,6 +49,22 @@ En Development la app:
 - **Ideador**: registra ideas y consulta su historial.
 - **Admin** (solo si tiene rol Admin): revisa ideas, clasifica y registra manualmente.
 
+## ⚙️ Configuración y Despliegue (Producción)
+
+La aplicación tiene comportamientos distintos dependiendo del entorno (`Development` vs `Production`) y de la configuración en `appsettings.json`.
+
+### 1. Migraciones de Base de Datos
+* **Desarrollo:** Las migraciones se aplican automáticamente al iniciar la app (`dotnet run`).
+* **Producción:** Por seguridad, las migraciones automáticas están **DESACTIVADAS** por defecto para evitar bloqueos o cambios accidentales en la BD productiva.
+
+**Para activar migraciones automáticas en producción:**
+Cambiar `AutoMigrate` a `true` en `appsettings.json`:
+```json
+"Database": {
+  "AutoMigrate": true
+}
+```
+
 ## Checklist de pruebas manuales
 1. Inicia sesión con un usuario válido.
 2. Verifica que aparece la vista de ideador y el empleado está precargado.
