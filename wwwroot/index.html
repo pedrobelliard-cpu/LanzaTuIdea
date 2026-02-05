@@ -21,8 +21,8 @@
         .btn-registar:hover { background-color: #15803d; }
         .btn-cancelar { background-color: #dc2626; color: white; } /* Rojo */
         .btn-cancelar:hover { background-color: #b91c1c; }
-        .btn-limpiar { background-color: #facc15; color: #854d0e; } /* Amarillo */
-        .btn-limpiar:hover { background-color: #eab308; }
+        .btn-limpiar { background-color: #e2e8f0; color: #475569; } /* Gris suave */
+        .btn-limpiar:hover { background-color: #cbd5e1; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
@@ -49,14 +49,14 @@
                 <h1 class="text-3xl font-bold text-white mb-2">Bienvenido</h1>
                 <p class="text-blue-100">Ingresa tus credenciales para continuar</p>
             </div>
-            <form id="loginForm" class="p-8 space-y-4">
+            <form id="loginForm" class="p-8 space-y-4" autocomplete="off">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Usuario</label>
-                    <input type="text" id="loginUser" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu usuario" required>
+                    <input type="text" id="loginUser" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu usuario" required autocomplete="off">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
-                    <input type="password" id="loginPass" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu contraseña" required>
+                    <input type="password" id="loginPass" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tu contraseña" required autocomplete="off">
                 </div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Entrar</button>
                 <p class="text-xs text-slate-400 text-center">El rol (Admin o Gestor) se asigna desde el panel administrativo.</p>
@@ -92,26 +92,27 @@
                 <h3 class="text-xl font-bold text-slate-700">📝 Formulario de Registro</h3>
                 <button onclick="navIdeador('home')" class="text-sm font-bold text-slate-500 hover:text-blue-600">← Volver al inicio</button>
             </div>
-            <form id="formIdea" class="p-8 space-y-6">
+            <form id="formIdea" class="p-8 space-y-6" autocomplete="off">
                 <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs font-bold text-blue-800 uppercase mb-1">No. Empleado <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <input type="text" id="idEmpleado" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" readonly>
+                                <input type="text" id="idEmpleado" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" readonly required autocomplete="off">
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
-                            <input type="text" id="nombreEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                            <input type="text" id="nombreEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly required autocomplete="off">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Electrónico</label>
-                            <input type="text" id="correoEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                            <input type="email" id="correoEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly required autocomplete="off">
+                            <span class="text-xs text-red-500 hidden" id="emailHint">Formato de correo inválido</span>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dirección / Depto</label>
-                            <input type="text" id="direccionEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                            <input type="text" id="direccionEmpleado" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly required autocomplete="off">
                         </div>
                     </div>
                 </div>
@@ -129,7 +130,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Instancia</label>
-                        <select id="ideaInstancia" class="w-full p-3 border rounded-xl bg-white text-sm">
+                        <select id="ideaInstancia" class="w-full p-3 border rounded-xl bg-white text-sm" required>
                             <option value="">Seleccione una instancia</option>
                         </select>
                         <p class="text-xs text-slate-400 mt-1">Seleccione la instancia regional o centro al que pertenece.</p>
@@ -351,24 +352,24 @@
                 <h3 class="text-xl font-bold text-slate-700">🛡️ Registro Manual Administrativo</h3>
                 <button onclick="navAdmin('dashboard')" class="text-sm font-bold text-slate-500 hover:text-blue-600">← Volver al dashboard</button>
             </div>
-            <form id="formAdminManual" class="p-8 space-y-6">
+            <form id="formAdminManual" class="p-8 space-y-6" autocomplete="off">
                 <div class="bg-sky-50 p-6 rounded-2xl border border-sky-100 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs font-bold text-sky-700 uppercase mb-1">No. Empleado</label>
-                            <input type="text" id="adminIdEmp" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-sky-500" placeholder="Ej: 1010" required>
+                            <input type="text" id="adminIdEmp" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-sky-500" placeholder="Ej: 1010" required autocomplete="off">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
-                            <input type="text" id="adminNomEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                            <input type="text" id="adminNomEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly autocomplete="off">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo</label>
-                            <input type="text" id="adminMailEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                            <input type="text" id="adminMailEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly autocomplete="off">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Departamento</label>
-                            <input type="text" id="adminDirEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly>
+                            <input type="text" id="adminDirEmp" class="w-full p-3 bg-slate-200 border border-slate-300 rounded-xl text-slate-600" readonly autocomplete="off">
                         </div>
                     </div>
                 </div>
@@ -586,6 +587,10 @@
             document.getElementById('formIdea').addEventListener('submit', handleIdeaSubmit);
             document.getElementById('formAdminManual').addEventListener('submit', handleManualSubmit);
             document.getElementById('adminIdEmp').addEventListener('input', (e) => buscarEmpleadoAdmin(e.target.value));
+            const correoEmpleadoInput = document.getElementById('correoEmpleado');
+            if (correoEmpleadoInput) {
+                correoEmpleadoInput.addEventListener('input', validateCorreoEmpleado);
+            }
             const timelineButton = document.getElementById('timelineFilterButton');
             if (timelineButton) {
                 timelineButton.addEventListener('click', () => cargarTimeline());
@@ -600,7 +605,18 @@
                 .find(([key]) => key === name)?.[1] ?? null;
         }
 
+        function getAppBaseHref() {
+            const baseTag = document.querySelector('base');
+            if (baseTag && baseTag.href) {
+                return baseTag.href;
+            }
+            return window.location.href.replace(/\/[^\/?#]*([?#].*)?$/, '/');
+        }
+
         async function apiFetch(url, options = {}) {
+            const endpoint = url.startsWith('/') ? url.substring(1) : url;
+            const baseUrl = getAppBaseHref();
+            const finalUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}${endpoint}`;
             const headers = options.headers || {};
             const method = (options.method || 'GET').toUpperCase();
             const finalHeaders = {
@@ -620,7 +636,7 @@
                 ...options,
                 headers: finalHeaders
             };
-            return fetch(url, finalOptions);
+            return fetch(finalUrl, finalOptions);
         }
 
         async function loadCatalogs() {
@@ -885,6 +901,7 @@
                 email,
                 departamento
             });
+            validateCorreoEmpleado();
 
             if (userData.instancia) {
                 document.getElementById('ideaInstancia').value = userData.instancia;
@@ -897,7 +914,25 @@
         }
 
         function limpiarFormulario() {
-            document.getElementById('formIdea').reset();
+            document.getElementById('descIdea').value = '';
+            document.getElementById('detalleIdea').value = '';
+            document.getElementById('ideaInstancia').value = '';
+            const emailHint = document.getElementById('emailHint');
+            if (emailHint) {
+                emailHint.classList.add('hidden');
+            }
+        }
+
+        function validateCorreoEmpleado() {
+            const input = document.getElementById('correoEmpleado');
+            const hint = document.getElementById('emailHint');
+            if (!input || !hint) {
+                return true;
+            }
+            const value = input.value.trim();
+            const isValid = value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            hint.classList.toggle('hidden', isValid);
+            return isValid;
         }
 
         function cancelarProceso() {
@@ -919,6 +954,10 @@
 
         async function handleIdeaSubmit(e) {
             e.preventDefault();
+            if (!validateCorreoEmpleado()) {
+                showError('Error', 'Formato de correo inválido.');
+                return;
+            }
             const desc = document.getElementById('descIdea').value.trim();
             const detalle = document.getElementById('detalleIdea').value.trim();
 
@@ -985,6 +1024,22 @@
             renderIdeadorList(ideas);
         }
 
+        async function eliminarIdeaIdeador(id) {
+            const confirmed = await showConfirm(
+                'Eliminar idea',
+                '¿Deseas eliminar esta idea? Esta acción no se puede deshacer.'
+            );
+            if (!confirmed) {
+                return;
+            }
+            const response = await apiFetch(`/api/ideas/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                showError('Error', 'No fue posible eliminar la idea.');
+                return;
+            }
+            await loadMyIdeas();
+        }
+
         function renderIdeadorList(ideas) {
             const tbody = document.getElementById('tablaMisIdeas');
             tbody.innerHTML = '';
@@ -995,13 +1050,22 @@
 
             ideas.forEach(idea => {
                 const fecha = new Date(idea.createdAt).toISOString().split('T')[0];
+                const canDelete = idea.status === 'Registrada';
+                const deleteButton = canDelete
+                    ? `<button onclick="eliminarIdeaIdeador(${idea.id})" class="text-rose-600 hover:text-rose-800">🗑️ Eliminar</button>`
+                    : '';
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="p-4 font-bold text-slate-600">${idea.id}</td>
                         <td class="p-4 text-slate-500">${fecha}</td>
                         <td class="p-4 font-medium text-slate-800">${idea.descripcion}</td>
                         <td class="p-4"><span class="px-2 py-1 rounded text-xs font-bold ${getColorStatus(idea.status)}">${idea.status}</span></td>
-                        <td class="p-4 text-center"><button onclick="mostrarDetalle(${idea.id})" class="text-blue-600 hover:text-blue-800">👁️ Ver</button></td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-3">
+                                <button onclick="mostrarDetalle(${idea.id})" class="text-blue-600 hover:text-blue-800">👁️ Ver</button>
+                                ${deleteButton}
+                            </div>
+                        </td>
                     </tr>`;
             });
         }
@@ -1419,7 +1483,6 @@
                             <button class="px-3 py-1 rounded-lg text-xs font-bold ${user.isActive ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
                                 ${user.isActive ? 'Desactivar' : 'Activar'}
                             </button>
-                            <button class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700">Eliminar</button>
                         </div>
                     </td>
                 `;
@@ -1440,11 +1503,8 @@
                 instanceSelect.addEventListener('change', () => actualizarInstanciaUsuario(user.userName, instanceSelect.value));
                 roleSelect.value = currentRole;
                 roleSelect.addEventListener('change', () => actualizarRolUsuario(user.userName, roleSelect.value));
-                const buttons = row.querySelectorAll('button');
-                const toggleButton = buttons[0];
-                const deleteButton = buttons[1];
+                const toggleButton = row.querySelector('button');
                 toggleButton.addEventListener('click', () => actualizarEstadoUsuario(user.userName, !user.isActive));
-                deleteButton.addEventListener('click', () => eliminarUsuario(user.userName));
                 tbody.appendChild(row);
             });
         }

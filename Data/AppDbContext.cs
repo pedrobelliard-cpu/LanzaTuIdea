@@ -1,12 +1,18 @@
 using LanzaTuIdea.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace LanzaTuIdea.Api.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) { }
+    private readonly bool _useEmployeeView;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, IConfiguration configuration)
+        : base(options)
+    {
+        _useEmployeeView = configuration.GetValue<bool>("Database:UseEmployeeView");
+    }
 
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
@@ -29,6 +35,15 @@ public class AppDbContext : DbContext
             entity.Property(e => e.E_Mail).HasMaxLength(200);
             entity.Property(e => e.Departamento).HasMaxLength(200);
             entity.Property(e => e.Estatus).HasMaxLength(5).HasDefaultValue("A");
+
+            if (_useEmployeeView)
+            {
+                entity.ToView("vw_Employees");
+            }
+            else
+            {
+                entity.ToTable("Employees");
+            }
         });
 
         modelBuilder.Entity<AppUser>(entity =>
@@ -95,5 +110,34 @@ public class AppDbContext : DbContext
             entity.HasKey(i => i.Id);
             entity.Property(i => i.Nombre).HasMaxLength(200).IsRequired();
         });
+    }
+
+    public override int SaveChanges()
+    {
+        if (_useEmployeeView)
+        {
+            IgnoreEmployeeWrites();
+        }
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        if (_useEmployeeView)
+        {
+            IgnoreEmployeeWrites();
+        }
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void IgnoreEmployeeWrites()
+    {
+        foreach (var entry in ChangeTracker.Entries<Employee>())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            {
+                entry.State = EntityState.Unchanged;
+            }
+        }
     }
 }

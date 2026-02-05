@@ -168,6 +168,50 @@ public class IdeasController : ControllerBase
             history);
     }
 
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var userName = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        var idea = await _context.Ideas.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        if (idea is null)
+        {
+            return NotFound();
+        }
+
+        if (idea.CreatedByUserId != user.Id)
+        {
+            return Forbid();
+        }
+
+        if (!string.Equals(idea.Status, AppConstants.Status.Registrada, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { message = "No se puede eliminar una idea en proceso." });
+        }
+
+        _context.Ideas.Remove(idea);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "No fue posible eliminar la idea." });
+        }
+
+        return Ok();
+    }
+
     private async Task<AppUser?> CreateUserFromClaimsAsync(string userName, CancellationToken cancellationToken)
     {
         var codigoEmpleado = User.FindFirstValue("CodigoEmpleado");

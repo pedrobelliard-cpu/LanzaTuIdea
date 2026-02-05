@@ -12,6 +12,28 @@
 3. (Opcional) define bootstrap admins en desarrollo:
    - `BootstrapAdmins: ["usuario1", "usuario2"]`
 
+## Arquitectura de Datos: Empleados (Dev vs Prod)
+
+La aplicación implementa una estrategia híbrida para consultar la información de los empleados, permitiendo aislar el entorno de desarrollo de los datos reales de producción (SPN).
+
+### Comportamiento
+* **En Desarrollo (`Development`):** La aplicación utiliza una tabla física local llamada `Employees`. Esta tabla es gestionada por Entity Framework y se alimenta automáticamente desde el archivo `seed/empleados.csv` si está vacía.
+* **En Producción:** La aplicación ignora la tabla física y mapea la entidad `Employee` directamente a una Vista SQL llamada `vw_Employees`. Esta vista debe existir en la base de datos de producción y apuntar a la fuente real de datos (SPN).
+
+### Cómo activar el modo Producción (Desactivar tabla local)
+Para que la aplicación deje de usar la tabla local y comience a consumir la Vista de producción, se debe cambiar la configuración en el `appsettings.json` o mediante variables de entorno en el servidor.
+
+**Configuración en `appsettings.json`:**
+
+```json
+"Database": {
+  "AutoMigrate": false,
+  "UseEmployeeView": true
+}
+```
+
+Nota para TI/DBA: Antes de activar UseEmployeeView: true, asegúrese de que la vista vw_Employees exista en la base de datos de destino y tenga las mismas columnas que el modelo de datos de la aplicación.
+
 ## Cómo correr en desarrollo
 ```bash
 dotnet run

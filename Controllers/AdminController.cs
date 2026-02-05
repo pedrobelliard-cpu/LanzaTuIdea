@@ -488,7 +488,7 @@ public class AdminController : ControllerBase
 
         var roles = await _context.Roles.Where(r => allowedRoles.Contains(r.Name)).ToListAsync(cancellationToken);
 
-        user.UserRoles.RemoveAll(ur => !requestedRoles.Contains(ur.Role.Name, StringComparer.OrdinalIgnoreCase));
+        user.UserRoles.Clear();
 
         foreach (var roleName in requestedRoles)
         {
